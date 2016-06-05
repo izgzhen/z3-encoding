@@ -8,8 +8,6 @@ import Z3.Type
 import Z3.Infer
 import Z3.Monad hiding (mkMap)
 
-import Common
-
 import Control.Monad.State
 import Control.Monad.Except (throwError)
 import qualified Data.Map as M
@@ -28,19 +26,19 @@ mkAST (PDisj p1 p2) = do
     mkOr [a1, a2]
 mkAST (PNeg p) = mkAST p >>= mkNot
 
-mkAST (PForAll (Name x) pty p) = do
+mkAST (PForAll x pty p) = do
     sym <- mkStringSymbol x
     sort <- tyToSort pty
     local $ do
-        addType (Name x) sort
+        addType x sort
         a <- mkAST p
         mkForall [] [sym] [sort] a
 
-mkAST (PExists (Name x) pty p) = do
+mkAST (PExists x pty p) = do
     sym <- mkStringSymbol x
     sort <- tyToSort pty
     local $ do
-        addType (Name x) sort
+        addType x sort
         a <- mkAST p
         mkExists [] [sym] [sort] a
 
@@ -67,15 +65,15 @@ mkAssertAST (AInMap k v m) = do
     mkEq lhs vTm
 
 mkTermAST :: Term -> SMT AST
-mkTermAST (TmVar v@(Name vx)) = do
+mkTermAST (TmVar v) = do
     ctx <- get
     case M.lookup v (_valBindings ctx) of
         Just val -> mkValAST val
         Nothing  -> case M.lookup v (_typeContext ctx) of
             Just sort -> do
-                sym <- mkStringSymbol vx
+                sym <- mkStringSymbol v
                 mkVar sym sort
-            Nothing -> throwError $ "Unbound variable: " ++ vx
+            Nothing -> throwError $ "Unbound variable: " ++ v
 
 mkTermAST (TmVal pval) = mkValAST pval
 

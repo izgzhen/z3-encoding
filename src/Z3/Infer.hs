@@ -1,6 +1,5 @@
 module Z3.Infer where
 
-import Common
 import Z3.Spec
 import Z3.Type
 
@@ -51,7 +50,7 @@ newName = do
 newTyVar :: MonadState Counter m => m Type
 newTyVar = TyVar <$> newName
 
-infer :: M.Map Name TS -> Term -> Infer (Substitution, Type)
+infer :: M.Map String TS -> Term -> Infer (Substitution, Type)
 infer env expr = case expr of
     TmVal pval -> case pval of
         VBool _   -> return (M.empty, TyBool)
@@ -107,13 +106,13 @@ runInfer term =
 
 -- Helpers
 
-substEnv :: M.Map Name TS -> Substitution -> M.Map Name TS
+substEnv :: M.Map String TS -> Substitution -> M.Map String TS
 substEnv e s = M.map (`substInner` s) e
 
 unionUpdate :: Ord k => M.Map k v -> M.Map k v -> M.Map k v
 unionUpdate a b = (b M.\\ a) `M.union` a
 
-tyClosure :: M.Map Name TS -> Type -> TS
+tyClosure :: M.Map String TS -> Type -> TS
 tyClosure e t =
     let tvars = freeInType t L.\\ freeInEnv e
     in  mkTS tvars t
@@ -128,7 +127,7 @@ canonicalize (TSForall t ty) =
     let (tyvars, ty') = canonicalize ty
     in  (t : tyvars, ty')
 
-freeInEnv :: M.Map Name TS -> [String]
+freeInEnv :: M.Map String TS -> [String]
 freeInEnv = foldr L.union [] . map freeInTS . M.elems
 
 freeInTS :: TS -> [String]

@@ -2,8 +2,6 @@
 
 module Z3.Type where
 
-import Common
-
 import qualified Data.Map as M
 import qualified Data.Set as S
 

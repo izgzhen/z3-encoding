@@ -15,15 +15,14 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Common
-                       Z3.Context
+  exposed-modules:     Z3.Context
                        Z3.Encoding
                        Z3.Infer
                        Z3.Spec
                        Z3.Test
                        Z3.Type
   -- other-modules:       
-  other-extensions:    PolyKinds, LambdaCase, ScopedTypeVariables, UndecidableInstances
+  other-extensions:    LambdaCase, UndecidableInstances
   build-depends:       base >=4.9 && <4.10,
                        mtl >=2.2 && <2.3,
                        containers >=0.5 && <0.6,

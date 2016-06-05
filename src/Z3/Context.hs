@@ -1,6 +1,5 @@
 module Z3.Context where
 
-import Common
 import Z3.Type
 import Z3.Monad
 
@@ -9,8 +8,8 @@ import Control.Monad.Except
 import qualified Data.Map as M
 
 data SMTContext = SMTContext {
-    _valBindings :: M.Map Name Value,
-    _typeContext :: M.Map Name Sort,
+    _valBindings :: M.Map String Value,
+    _typeContext :: M.Map String Sort,
     _counter :: Int
 } deriving (Show, Eq)
 
@@ -27,11 +26,11 @@ genFreshId = do
     return i
 
 
-runSMT :: M.Map Name Value -> SMT a -> IO (Either String a)
+runSMT :: M.Map String Value -> SMT a -> IO (Either String a)
 runSMT binds smt = evalZ3With Nothing opts m
     where
         opts = opt "MODEL" True
         m = evalStateT (runExceptT smt) (SMTContext binds M.empty 0)
 
-addType :: Name -> Sort -> SMT ()
+addType :: String -> Sort -> SMT ()
 addType x s = modify (\ctx -> ctx { _typeContext = M.insert x s (_typeContext ctx)})

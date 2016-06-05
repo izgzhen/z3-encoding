@@ -5,9 +5,8 @@ import Z3.Spec
 import Z3.Type
 import Z3.Encoding
 import Z3.Monad
-import Common
-import Control.Monad.IO.Class (liftIO)
 
+import Control.Monad.IO.Class (liftIO)
 import qualified Data.Map as M
 
 checkPre :: Pred -> SMT (Result, Maybe Model)
@@ -46,12 +45,12 @@ tests = [
     (PNeg PFalse, Right Sat),
     (PCmp CEq (TmVal (VInt 1)) (TmVal (VInt 1)), Right Sat),
     (PCmp CEq (TmVal (VBool True)) (TmVal (VBool False)), Right Unsat),
-    (PForAll (Name "x") TyInt PTrue, Right Sat),
-    (PExists (Name "x") TyInt (PCmp CEq (TmVar (Name "x")) (TmVal (VInt 1))), Right Sat),
-    (PForAll (Name "x") TyInt (PImpli (PCmp CLess (TmVar (Name "x")) (TmVal (VInt 0)))
-                                     (PCmp CLess (TmVar (Name "x")) (TmVal (VInt 1)))), Right Sat),
-    (PForAll (Name "x") TyInt (PImpli (PCmp CLess (TmVar (Name "x")) (TmVal (VInt 1)))
-                                     (PCmp CLess (TmVar (Name "x")) (TmVal (VInt 0)))), Right Unsat),
+    (PForAll "x" TyInt PTrue, Right Sat),
+    (PExists "x" TyInt (PCmp CEq (TmVar "x") (TmVal (VInt 1))), Right Sat),
+    (PForAll "x" TyInt (PImpli (PCmp CLess (TmVar "x") (TmVal (VInt 0)))
+                                     (PCmp CLess (TmVar "x") (TmVal (VInt 1)))), Right Sat),
+    (PForAll "x" TyInt (PImpli (PCmp CLess (TmVar "x") (TmVal (VInt 1)))
+                                     (PCmp CLess (TmVar "x") (TmVal (VInt 0)))), Right Unsat),
     (PAssert (AInMap (TmVal (VInt 1)) (TmVal (VInt 1))
                      (TmVal (VMap (M.singleton (VInt 1) (VInt 1))))), Right Sat)
     ]

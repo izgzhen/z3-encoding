@@ -3,9 +3,8 @@
 module Z3.Spec where
 
 import Z3.Type
-import Common
 
-data Term = TmVar Name
+data Term = TmVar String
           | TmVal Value
           deriving (Show, Eq)
 
@@ -14,8 +13,8 @@ data Pred = PTrue
           | PConj Pred Pred
           | PDisj Pred Pred
           | PNeg Pred
-          | PForAll Name Type Pred
-          | PExists Name Type Pred
+          | PForAll String Type Pred
+          | PExists String Type Pred
           | PImpli Pred Pred
           | PCmp CmpOp Term Term
           | PAssert Assertion
