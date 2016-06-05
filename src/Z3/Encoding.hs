@@ -29,16 +29,18 @@ mkAST (PNeg p) = mkAST p >>= mkNot
 mkAST (PForAll x pty p) = do
     sym <- mkStringSymbol x
     sort <- tyToSort pty
+    idx <- mkBound 0 sort
     local $ do
-        addType x sort
+        bindQualified x idx
         a <- mkAST p
         mkForall [] [sym] [sort] a
 
 mkAST (PExists x pty p) = do
     sym <- mkStringSymbol x
     sort <- tyToSort pty
+    idx <- mkBound 0 sort
     local $ do
-        addType x sort
+        bindQualified x idx
         a <- mkAST p
         mkExists [] [sym] [sort] a
 
@@ -69,10 +71,8 @@ mkTermAST (TmVar v) = do
     ctx <- get
     case M.lookup v (_valBindings ctx) of
         Just val -> mkValAST val
-        Nothing  -> case M.lookup v (_typeContext ctx) of
-            Just sort -> do
-                sym <- mkStringSymbol v
-                mkVar sym sort
+        Nothing  -> case M.lookup v (_qualifierContext ctx) of
+            Just idx -> return idx
             Nothing -> throwError $ "Unbound variable: " ++ v
 
 mkTermAST (TmVal pval) = mkValAST pval
@@ -83,7 +83,6 @@ mkValAST = \case
     VInt i      -> mkIntSort >>= mkInt i
     VDouble n   -> mkRealNum n
     VMap m      -> mkMap m
-    other       -> throwError $ "Can't process " ++ show other
 
 mkMap :: M.Map Value Value -> SMT AST
 mkMap m = do

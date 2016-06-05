@@ -21,8 +21,10 @@ test = flip mapM_ tests $ \(p, expected) -> do
         case mm of
             Just model -> do
                 modelStr <- showModel model
-                liftIO $ putStrLn ("Model: " ++ modelStr)
-            Nothing -> return ()
+                if length modelStr > 0 then
+                    liftIO $ putStrLn ("Model: " ++ modelStr ++ ".")
+                else liftIO $ putStrLn "No model."
+            Nothing -> liftIO $ putStrLn "No model."
         case r of
             Unsat -> do
                 core <- getUnsatCore
@@ -48,9 +50,10 @@ tests = [
     (PForAll "x" TyInt PTrue, Right Sat),
     (PExists "x" TyInt (PCmp CEq (TmVar "x") (TmVal (VInt 1))), Right Sat),
     (PForAll "x" TyInt (PImpli (PCmp CLess (TmVar "x") (TmVal (VInt 0)))
-                                     (PCmp CLess (TmVar "x") (TmVal (VInt 1)))), Right Sat),
+                               (PCmp CLess (TmVar "x") (TmVal (VInt 1)))), Right Sat),
     (PForAll "x" TyInt (PImpli (PCmp CLess (TmVar "x") (TmVal (VInt 1)))
-                                     (PCmp CLess (TmVar "x") (TmVal (VInt 0)))), Right Unsat),
+                               (PCmp CLess (TmVar "x") (TmVal (VInt 0)))), Right Unsat),
+    (PForAll "x" TyInt (PImpli PTrue PFalse), Right Unsat),
     (PAssert (AInMap (TmVal (VInt 1)) (TmVal (VInt 1))
                      (TmVal (VMap (M.singleton (VInt 1) (VInt 1))))), Right Sat)
     ]
