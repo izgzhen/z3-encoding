@@ -11,7 +11,7 @@ data Value = VBool Bool
            | VMap (M.Map Value Value)
            -- | VSet (S.Set Value)
            -- | VADT Name [Value]
-           deriving (Show, Eq)
+           deriving (Show, Ord, Eq)
 
 data Type = TyVar String
           | TyBool

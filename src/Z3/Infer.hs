@@ -63,12 +63,13 @@ infer env expr = case expr of
                     let (tm1, tm2):_ = l
                     (s1, t1) <- infer env (TmVal tm1)
                     (s2, t2) <- infer (env `substEnv` s1) (TmVal tm2)
-                    t <- newTyVar
-                    case unify (t1 `subst` s2) (TyMap t2 t) of
-                        Just v  -> return (v `unionUpdate` (s2 `unionUpdate` s1), t `subst` v)
-                        Nothing -> throwError $ "can't unify " ++
-                                                "t1: " ++ show (t1 `subst` s2) ++ " with " ++
-                                                "t2: " ++ show (TyMap t2 t)
+                    -- t <- newTyVar
+                    return (s1, TyMap t1 t2)
+                    -- case unify (t1 `subst` s2) (TyMap t2 t) of
+                    --     Just v  -> return (v `unionUpdate` (s2 `unionUpdate` s1), t `subst` v)
+                    --     Nothing -> throwError $ "can't unify " ++
+                    --                             "t1: " ++ show (t1 `subst` s2) ++ " with " ++
+                    --                             "t2: " ++ show (TyMap t2 t)
                 else do
                     t1 <- newTyVar
                     t2 <- newTyVar
@@ -81,7 +82,6 @@ infer env expr = case expr of
         --         else do
         --             t <- newTyVar
         --             return (M.empty, TySet t)
-        other -> throwError $ "can't infer" ++ show other
     TmVar x ->
         case M.lookup x env of
             Just ts -> do
@@ -91,8 +91,6 @@ infer env expr = case expr of
                 let s = M.fromList $ zip tyvars tyvars'
                 return (M.empty, ty `subst` s)
             Nothing -> throwError $ "no such variable: " ++ show x
-
-    other -> throwError $ "can't infer type for " ++ show other
 
 type Infer = ExceptT String (ReaderT () (State Counter))
 

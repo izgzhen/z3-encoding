@@ -4,7 +4,7 @@ import Z3.Context
 import Z3.Logic
 import Z3.Type
 import Z3.Encoding
-import Z3.Monad
+import Z3.Monad hiding (mkMap)
 
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Map as M
@@ -57,3 +57,15 @@ tests = [
     (PAssert (AInMap (TmVal (VInt 1)) (TmVal (VInt 1))
                      (TmVal (VMap (M.singleton (VInt 1) (VInt 1))))), Right Sat)
     ]
+
+test2 = runSMT M.empty $ do
+    mAst <- mkMap (M.fromList [(VInt 1, VInt 2),
+                               (VInt 2, VInt 4),
+                               (VInt (-1), VInt (-1)) -- HACK: guard
+                              ])
+    -- assert mAst
+    (r, Just m) <- getModel
+    ms <- showModel m
+    liftIO (putStrLn $ "Model: " ++ ms)
+    return r
+

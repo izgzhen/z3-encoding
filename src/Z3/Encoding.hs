@@ -63,7 +63,7 @@ mkAssertAST (AInMap k v m) = do
     kTm <- mkTermAST k
     vTm <- mkTermAST v
     mTm <- mkTermAST m
-    lhs <- mkSelect kTm mTm
+    lhs <- mkSelect mTm kTm
     mkEq lhs vTm
 
 mkTermAST :: Term -> SMT AST
@@ -93,13 +93,15 @@ mkMap m = do
                     Right o -> throwError $ "Infer wrongly " ++ show tm ++ " as " ++ show o
     sk <- tyToSort tyk
     sv <- tyToSort tyv
-    arrs <- mkArraySort sk sv
+    arrSort <- mkArraySort sk sv
     fid <- genFreshId
-    arr <- mkFreshConst ("map" ++ show fid ++ "_") arrs
-    foldM (\arr' (k, v) -> do
+    arr <- mkFreshConst ("map" ++ show fid ++ "_") arrSort
+    mapM_ (\(k, v) -> do
         kast <- mkValAST k
         vast <- mkValAST v
-        mkStore arr' kast vast) arr (M.toList m)
+        sel <- mkSelect arr kast
+        mkEq sel vast >>= assert) (M.toList m)
+    return arr
 
 tyToSort :: Type -> SMT Sort
 tyToSort TyBool   = mkBoolSort
