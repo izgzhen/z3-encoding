@@ -11,6 +11,7 @@ import Z3.Monad hiding (mkMap)
 import Control.Monad.State
 import Control.Monad.Except (throwError)
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 mkAST :: Pred -> SMT AST
 mkAST PTrue = mkTrue
@@ -65,6 +66,12 @@ mkAssertAST (AInMap k v m) = do
     mTm <- mkTermAST m
     lhs <- mkSelect mTm kTm
     mkEq lhs vTm
+mkAssertAST (AInSet e s) = do
+    eTm <- mkTermAST e
+    sTm <- mkTermAST s
+    lhs <- mkSelect sTm eTm
+    one <- (mkIntSort >>= mkInt 1)
+    mkEq one lhs
 
 mkTermAST :: Term -> SMT AST
 mkTermAST (TmVar v) = do
@@ -83,6 +90,31 @@ mkValAST = \case
     VInt i      -> mkIntSort >>= mkInt i
     VDouble n   -> mkRealNum n
     VMap m      -> mkMap m
+    VSet s      -> mkSet s
+
+mkSet :: S.Set Value -> SMT AST
+mkSet s = do
+    let tm = TmVal (VSet s)
+    tyElem <- case runInfer tm of
+                Left err        -> throwError err
+                Right (TySet t) -> return t
+                Right other     -> throwError $ "Infer wrongly " ++
+                                                show tm ++ " as " ++ show other
+    sortElem <- tyToSort tyElem
+    intSort <- mkIntSort
+    arrSort <- mkArraySort sortElem intSort
+    fid <- genFreshId
+    arr <- mkFreshConst ("set" ++ "_" ++ show fid) arrSort
+    mapM_ (\e -> do
+        ast <- mkValAST e
+        sel <- mkSelect arr ast
+        one <- (mkIntSort >>= mkInt 1)
+        mkEq sel one >>= assert) (S.toList s)
+    def <- mkArrayDefault arr
+    zero <- (mkIntSort >>= mkInt 0)
+    mkEq zero def >>= assert
+    return arr
+
 
 mkMap :: M.Map Value Value -> SMT AST
 mkMap m = do
@@ -93,14 +125,17 @@ mkMap m = do
                     Right o -> throwError $ "Infer wrongly " ++ show tm ++ " as " ++ show o
     sk <- tyToSort tyk
     sv <- tyToSort tyv
+    vDef <- defaultOf tyv
     arrSort <- mkArraySort sk sv
     fid <- genFreshId
-    arr <- mkFreshConst ("map" ++ show fid ++ "_") arrSort
+    arr <- mkFreshConst ("map" ++ "_" ++ show fid) arrSort
     mapM_ (\(k, v) -> do
         kast <- mkValAST k
         vast <- mkValAST v
         sel <- mkSelect arr kast
         mkEq sel vast >>= assert) (M.toList m)
+    def <- mkArrayDefault arr
+    mkEq vDef def >>= assert
     return arr
 
 tyToSort :: Type -> SMT Sort
@@ -108,3 +143,8 @@ tyToSort TyBool   = mkBoolSort
 tyToSort TyInt    = mkIntSort
 tyToSort TyDouble = mkRealSort
 tyToSort other    = throwError $ "can't tyToSort " ++ show other
+
+defaultOf :: Type -> SMT AST
+defaultOf TyInt = do
+    s <- mkIntSort
+    mkInt (-1) s

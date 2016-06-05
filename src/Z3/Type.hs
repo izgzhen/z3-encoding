@@ -9,7 +9,7 @@ data Value = VBool Bool
            | VInt Int
            | VDouble Double
            | VMap (M.Map Value Value)
-           -- | VSet (S.Set Value)
+           | VSet (S.Set Value)
            -- | VADT Name [Value]
            deriving (Show, Ord, Eq)
 
@@ -19,7 +19,7 @@ data Type = TyVar String
           | TyDouble
           | TyString
           | TyMap Type Type
-          -- | TySet Type
+          | TySet Type
           -- | TyADT Name (M.Map Name [Type])
           deriving (Show, Eq)
 

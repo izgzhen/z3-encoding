@@ -64,7 +64,7 @@ infer env expr = case expr of
                     (s1, t1) <- infer env (TmVal tm1)
                     (s2, t2) <- infer (env `substEnv` s1) (TmVal tm2)
                     -- t <- newTyVar
-                    return (s1, TyMap t1 t2)
+                    return (s2, TyMap t1 t2)
                     -- case unify (t1 `subst` s2) (TyMap t2 t) of
                     --     Just v  -> return (v `unionUpdate` (s2 `unionUpdate` s1), t `subst` v)
                     --     Nothing -> throwError $ "can't unify " ++
@@ -75,13 +75,15 @@ infer env expr = case expr of
                     t2 <- newTyVar
                     return (M.empty, TyMap t1 t2)
 
-        -- VSet s -> do
-        --     let l = S.toList s
-        --     if length l > 0
-        --         then infer env (TmVal (head l))
-        --         else do
-        --             t <- newTyVar
-        --             return (M.empty, TySet t)
+        VSet s -> do
+            let l = S.toList s
+            if length l > 0
+                then do
+                    (s, te) <- infer env (TmVal (head l))
+                    return (s, TySet te)
+                else do
+                    t <- newTyVar
+                    return (M.empty, TySet t)
     TmVar x ->
         case M.lookup x env of
             Just ts -> do

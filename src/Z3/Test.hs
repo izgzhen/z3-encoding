@@ -8,6 +8,7 @@ import Z3.Monad hiding (mkMap)
 
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 checkPre :: Pred -> SMT (Result, Maybe Model)
 checkPre pre = local $ do
@@ -17,14 +18,14 @@ checkPre pre = local $ do
 test :: IO ()
 test = flip mapM_ tests $ \(p, expected) -> do
     ret <- runSMT M.empty $ do
-        (r, mm) <- checkPre p
-        case mm of
-            Just model -> do
-                modelStr <- showModel model
-                if length modelStr > 0 then
-                    liftIO $ putStrLn ("Model: " ++ modelStr ++ ".")
-                else liftIO $ putStrLn "No model."
-            Nothing -> liftIO $ putStrLn "No model."
+        (r, _mm) <- checkPre p
+        -- case mm of
+        --     Just model -> do
+        --         modelStr <- showModel model
+        --         if length modelStr > 0 then
+        --             liftIO $ putStrLn ("Model: " ++ modelStr ++ ".")
+        --         else liftIO $ putStrLn "No model."
+        --     Nothing -> liftIO $ putStrLn "No model."
         case r of
             Unsat -> do
                 core <- getUnsatCore
@@ -55,17 +56,7 @@ tests = [
                                (PCmp CLess (TmVar "x") (TmVal (VInt 0)))), Right Unsat),
     (PForAll "x" TyInt (PImpli PTrue PFalse), Right Unsat),
     (PAssert (AInMap (TmVal (VInt 1)) (TmVal (VInt 1))
-                     (TmVal (VMap (M.singleton (VInt 1) (VInt 1))))), Right Sat)
+                     (TmVal (VMap (M.singleton (VInt 1) (VInt 1))))), Right Sat),
+    (PAssert (AInSet (TmVal (VInt 10))
+                     (TmVal (VSet (S.singleton (VInt 10))))), Right Sat)
     ]
-
-test2 = runSMT M.empty $ do
-    mAst <- mkMap (M.fromList [(VInt 1, VInt 2),
-                               (VInt 2, VInt 4),
-                               (VInt (-1), VInt (-1)) -- HACK: guard
-                              ])
-    -- assert mAst
-    (r, Just m) <- getModel
-    ms <- showModel m
-    liftIO (putStrLn $ "Model: " ++ ms)
-    return r
-

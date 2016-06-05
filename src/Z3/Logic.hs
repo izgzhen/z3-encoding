@@ -21,6 +21,7 @@ data Pred = PTrue
           deriving (Show, Eq)
 
 data Assertion = AInMap Term Term Term -- K, V, M
+               | AInSet Term Term -- E, S
                deriving (Show, Eq)
 
 data BiOp = BPlus | BMinus deriving (Show, Eq)
