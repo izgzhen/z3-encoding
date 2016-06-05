@@ -1,7 +1,7 @@
 module Z3.Test where
 
 import Z3.Context
-import Z3.Spec
+import Z3.Logic
 import Z3.Type
 import Z3.Encoding
 import Z3.Monad

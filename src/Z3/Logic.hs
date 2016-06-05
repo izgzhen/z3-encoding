@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Z3.Spec where
+module Z3.Logic where
 
 import Z3.Type
 

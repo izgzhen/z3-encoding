@@ -18,7 +18,7 @@ library
   exposed-modules:     Z3.Context
                        Z3.Encoding
                        Z3.Infer
-                       Z3.Spec
+                       Z3.Logic
                        Z3.Test
                        Z3.Type
   -- other-modules:       

@@ -1,6 +1,6 @@
 module Z3.Infer where
 
-import Z3.Spec
+import Z3.Logic
 import Z3.Type
 
 import qualified Data.Map as M
