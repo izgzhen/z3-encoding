@@ -140,7 +140,6 @@ mkSet s = do
     mkEq zero def >>= assert
     return arr
 
-
 mkMap :: M.Map Value Value -> SMT AST
 mkMap m = do
     let tm = TmVal (VMap m)

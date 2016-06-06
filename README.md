@@ -5,12 +5,12 @@ A library targeting at providing high-level, extensible, easy to use Haskell int
 
 ## Features
 * [x] Primitive types: boolean, integer, double precision float number
-* [ ] Complex types: map, set, ADT
+* [x] Complex types: map, set, ADT
 * [x] Type inference
 * [x] Logic primitives and connectives: true, false, conjunction, disjunction, negation, implication
 * [x] Logic qualifiers: universal, existential
 * [x] Built-in assertions for primitive types: equality, less than 
-* [ ] Built-in assertions for complex types
+* [x] Built-in assertions for complex types
 * [ ] Extensible function
 * [ ] Extensible assertion
 

@@ -21,7 +21,6 @@ data Type = TyVar String
           | TyBool
           | TyInt
           | TyDouble
-          | TyString
           | TyMap Type Type
           | TySet Type
           | TyApp Type Type
