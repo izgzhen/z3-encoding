@@ -20,6 +20,8 @@ data SMTContext = SMTContext {
     _funcContext :: M.Map String Type,
     -- Bind local variables introduced by qualifiers to de brujin index in Z3
     _qualifierContext :: M.Map String AST,
+    -- From name to Z3 sort
+    _datatypeCtx :: M.Map String Sort,
     -- Counter used to generate globally unique ID
     _counter :: Int
 } deriving (Show, Eq)
@@ -37,16 +39,18 @@ genFreshId = do
     return i
 
 runSMT :: Decls -> SMT a -> IO (Either String a)
-runSMT decls smt = evalZ3With Nothing opts m
+runSMT decls smt = print funcs >> evalZ3With Nothing opts m
     where
         opts = opt "MODEL" True
+        funcs = constructFuncs (_datatypes decls)
         smt' = do
             sorts <- mapM initDataType (_datatypes decls)
-            let funcs = constructFuncs (zip sorts (map snd (_datatypes decls)))
-            modify $ \ctx -> ctx { _funcContext = funcs }
+            let datatypeCtx = M.fromList (zip (map fst (_datatypes decls)) sorts)
+            modify $ \ctx -> ctx { _funcContext = funcs,
+                                   _datatypeCtx = datatypeCtx }
             smt
         m = evalStateT (runExceptT smt')
-                       (SMTContext (_valBindings decls) M.empty M.empty 0)
+                       (SMTContext (_valBindings decls) M.empty M.empty M.empty 0)
 
 initDataType :: (String, [(String, [(String, Type)])]) -> SMT Sort
 initDataType (tyName, alts) = do
@@ -63,14 +67,14 @@ initDataType (tyName, alts) = do
     sort <- mkDatatype sym constrs
     return sort
 
-constructFuncs :: [(Sort, [(String, [(String, Type)])])] -> M.Map String Type
+constructFuncs :: [(String, [(String, [(String, Type)])])] -> M.Map String Type
 constructFuncs = M.fromList . concat . concatMap f
     where
-        f (sort, alts) =
+        f (tyName, alts) =
             flip map alts $ \(consName, fields) ->
                 let ftys = map snd fields
-                    ty   = TyADT sort
-                    cons = (consName, foldr TyApp ty ftys)
+                    ty   = TyADT tyName
+                    cons = (consName, consApp ftys ty)
                     dess = map (\(desName, fty) -> (desName, TyApp ty fty)) fields
                 in cons : dess
 
@@ -80,12 +84,18 @@ bindQualified x idx = modify $ \ctx ->
               M.insert x idx (_qualifierContext ctx)
             }
 
+consApp [] x = x
+consApp (y:ys) x = TyApp y (consApp ys x)
 
 tyToSort :: Type -> SMT Sort
 tyToSort TyBool         = mkBoolSort
 tyToSort TyInt          = mkIntSort
 tyToSort TyDouble       = mkRealSort
-tyToSort (TyADT sort)   = return sort
+tyToSort (TyADT tyName)  = do
+    ctx <- _datatypeCtx <$> get
+    case M.lookup tyName ctx of
+        Just sort -> return sort
+        Nothing   -> throwError $ "Undefined type: " ++ tyName
 tyToSort other          = throwError $ "can't tyToSort " ++ show other
 
 defaultOf :: Type -> SMT AST

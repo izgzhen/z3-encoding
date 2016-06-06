@@ -61,5 +61,7 @@ tests = [
                      (TmVal (VMap (M.singleton (VInt 1) (VInt 1))))), Right Sat),
     (PAssert (AInSet (TmVal (VInt 10))
                      (TmVal (VSet (S.singleton (VInt 10))))), Right Sat),
-    (PCmp CEq (TmVar "none") (TmVar "none"), Right Sat)
+    (PCmp CEq (TmVar "none") (TmVar "none"), Right Sat),
+    (PForAll "x" (TyADT "optionInt") PTrue, Right Sat),
+    (PCmp CEq (TmApp "just" [TmVal (VInt 1)]) (TmApp "just" [TmVal (VInt 1)]), Right Sat)
     ]
