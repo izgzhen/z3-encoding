@@ -76,13 +76,31 @@ mkAssertAST (AInSet e s) = do
 mkTermAST :: Term -> SMT AST
 mkTermAST (TmVar v) = do
     ctx <- get
-    case M.lookup v (_valBindings ctx) of
+    case M.lookup v (_bindings ctx) of
         Just val -> mkValAST val
         Nothing  -> case M.lookup v (_qualifierContext ctx) of
             Just idx -> return idx
             Nothing -> throwError $ "Unbound variable: " ++ v
 
 mkTermAST (TmVal pval) = mkValAST pval
+mkTermAST (TmApp f tms) = mkAppAST f tms
+
+mkAppAST :: String -> [Term] -> SMT AST
+mkAppAST fname args = do
+    argASTs <- mapM mkTermAST args
+    ctx <- _funcContext <$> get
+    case M.lookup fname ctx of
+        Just ty -> do
+            let tys = flattenApp ty
+            paramSorts <- mapM tyToSort (init tys)
+            retSort <- tyToSort (last tys)
+            sym <- mkStringSymbol fname
+            decl <- mkFuncDecl sym paramSorts retSort
+            mkApp decl argASTs
+        Nothing -> throwError $ "Can't find function " ++ fname
+
+flattenApp (TyApp t1 t2) = flattenApp t1 ++ flattenApp t2
+flattenApp other = [other]
 
 mkValAST :: Value -> SMT AST
 mkValAST = \case
@@ -95,7 +113,8 @@ mkValAST = \case
 mkSet :: S.Set Value -> SMT AST
 mkSet s = do
     let tm = TmVal (VSet s)
-    tyElem <- case runInfer tm of
+    ctx <- _funcContext <$> get
+    tyElem <- case runInfer ctx tm of
                 Left err        -> throwError err
                 Right (TySet t) -> return t
                 Right other     -> throwError $ "Infer wrongly " ++
@@ -119,7 +138,8 @@ mkSet s = do
 mkMap :: M.Map Value Value -> SMT AST
 mkMap m = do
     let tm = TmVal (VMap m)
-    (tyk, tyv) <- case runInfer tm of
+    ctx <- _funcContext <$> get
+    (tyk, tyv) <- case runInfer ctx tm of
                     Left err -> throwError err
                     Right (TyMap t1 t2) -> return (t1, t2)
                     Right o -> throwError $ "Infer wrongly " ++ show tm ++ " as " ++ show o
@@ -137,14 +157,3 @@ mkMap m = do
     def <- mkArrayDefault arr
     mkEq vDef def >>= assert
     return arr
-
-tyToSort :: Type -> SMT Sort
-tyToSort TyBool   = mkBoolSort
-tyToSort TyInt    = mkIntSort
-tyToSort TyDouble = mkRealSort
-tyToSort other    = throwError $ "can't tyToSort " ++ show other
-
-defaultOf :: Type -> SMT AST
-defaultOf TyInt = do
-    s <- mkIntSort
-    mkInt (-1) s

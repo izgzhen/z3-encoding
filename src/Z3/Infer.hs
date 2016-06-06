@@ -1,6 +1,5 @@
 module Z3.Infer where
 
-import Z3.Logic
 import Z3.Type
 
 import qualified Data.Map as M
@@ -93,14 +92,17 @@ infer env expr = case expr of
                 let s = M.fromList $ zip tyvars tyvars'
                 return (M.empty, ty `subst` s)
             Nothing -> throwError $ "no such variable: " ++ show x
+    TmApp f _ -> case M.lookup f env of
+        Just (TSInner ty) -> return (M.empty, ty)
+        other             -> throwError $ "Invalid Function Type: " ++ show other
 
 type Infer = ExceptT String (ReaderT () (State Counter))
 
-runInfer :: Term -> Either String Type
-runInfer term =
+runInfer :: M.Map String Type -> Term -> Either String Type
+runInfer initEnv term =
     let initCounter = Counter 0
-        initEnv     = M.empty
-        m           = infer initEnv term
+        env         = M.map TSInner initEnv
+        m           = infer env term
         e           = fst $ runState (runReaderT (runExceptT m) ()) initCounter
     in  snd <$> e
 

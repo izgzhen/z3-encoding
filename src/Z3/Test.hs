@@ -17,7 +17,7 @@ checkPre pre = local $ do
 
 test :: IO ()
 test = flip mapM_ tests $ \(p, expected) -> do
-    ret <- runSMT M.empty $ do
+    ret <- runSMT (Decls M.empty []) $ do
         (r, _mm) <- checkPre p
         -- case mm of
         --     Just model -> do

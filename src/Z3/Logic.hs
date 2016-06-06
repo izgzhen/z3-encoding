@@ -4,10 +4,6 @@ module Z3.Logic where
 
 import Z3.Type
 
-data Term = TmVar String
-          | TmVal Value
-          deriving (Show, Eq)
-
 data Pred = PTrue
           | PFalse
           | PConj Pred Pred
