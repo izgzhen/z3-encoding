@@ -140,13 +140,10 @@ freeInTS ts =
 freeInType :: Type -> [String]
 freeInType (TyVar x) = [x]
 freeInType (TyMap t1 t2) = freeInType t1 ++ freeInType t2
--- freeInType (TySet t) = freeInType t
 freeInType _ = []
-
 
 substInner :: TS -> Substitution -> TS
 substInner ts s =
     let (tyvars, ty) = canonicalize ts
         s' = foldr M.delete s tyvars
     in  mkTS tyvars $ ty `subst` s'
-

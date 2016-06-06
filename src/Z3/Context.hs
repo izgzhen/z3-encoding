@@ -40,12 +40,15 @@ runSMT :: Decls -> SMT a -> IO (Either String a)
 runSMT decls smt = evalZ3With Nothing opts m
     where
         opts = opt "MODEL" True
-        funcs = constructFuncs (_datatypes decls)
-        smt' = mapM_ initDataType (_datatypes decls) >> smt
+        smt' = do
+            sorts <- mapM initDataType (_datatypes decls)
+            let funcs = constructFuncs (zip sorts (map snd (_datatypes decls)))
+            modify $ \ctx -> ctx { _funcContext = funcs }
+            smt
         m = evalStateT (runExceptT smt')
-                       (SMTContext (_valBindings decls) funcs M.empty 0)
+                       (SMTContext (_valBindings decls) M.empty M.empty 0)
 
-initDataType :: (String, [(String, [(String, Type)])]) -> SMT (String, Sort)
+initDataType :: (String, [(String, [(String, Type)])]) -> SMT Sort
 initDataType (tyName, alts) = do
     constrs <- mapM (\(consName, fields) -> do
                         consSym <- mkStringSymbol consName
@@ -58,15 +61,15 @@ initDataType (tyName, alts) = do
                     ) alts
     sym <- mkStringSymbol tyName
     sort <- mkDatatype sym constrs
-    return (tyName, sort)
+    return sort
 
-constructFuncs :: [(String, [(String, [(String, Type)])])] -> M.Map String Type
+constructFuncs :: [(Sort, [(String, [(String, Type)])])] -> M.Map String Type
 constructFuncs = M.fromList . concat . concatMap f
     where
-        f (tyName, alts) =
+        f (sort, alts) =
             flip map alts $ \(consName, fields) ->
                 let ftys = map snd fields
-                    ty   = TyADT tyName
+                    ty   = TyADT sort
                     cons = (consName, foldr TyApp ty ftys)
                     dess = map (\(desName, fty) -> (desName, TyApp ty fty)) fields
                 in cons : dess
@@ -79,10 +82,11 @@ bindQualified x idx = modify $ \ctx ->
 
 
 tyToSort :: Type -> SMT Sort
-tyToSort TyBool   = mkBoolSort
-tyToSort TyInt    = mkIntSort
-tyToSort TyDouble = mkRealSort
-tyToSort other    = throwError $ "can't tyToSort " ++ show other
+tyToSort TyBool         = mkBoolSort
+tyToSort TyInt          = mkIntSort
+tyToSort TyDouble       = mkRealSort
+tyToSort (TyADT sort)   = return sort
+tyToSort other          = throwError $ "can't tyToSort " ++ show other
 
 defaultOf :: Type -> SMT AST
 defaultOf TyInt = do

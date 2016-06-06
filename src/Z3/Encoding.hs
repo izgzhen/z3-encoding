@@ -80,24 +80,30 @@ mkTermAST (TmVar v) = do
         Just val -> mkValAST val
         Nothing  -> case M.lookup v (_qualifierContext ctx) of
             Just idx -> return idx
-            Nothing -> throwError $ "Unbound variable: " ++ v
-
+            Nothing -> do -- zero arity func
+                decl <- mkFunc v
+                mkApp decl []
 mkTermAST (TmVal pval) = mkValAST pval
 mkTermAST (TmApp f tms) = mkAppAST f tms
 
-mkAppAST :: String -> [Term] -> SMT AST
-mkAppAST fname args = do
-    argASTs <- mapM mkTermAST args
-    ctx <- _funcContext <$> get
-    case M.lookup fname ctx of
+mkFunc :: String -> SMT FuncDecl
+mkFunc fname = do
+    ctx <- get
+    case M.lookup fname (_funcContext ctx) of
         Just ty -> do
             let tys = flattenApp ty
             paramSorts <- mapM tyToSort (init tys)
             retSort <- tyToSort (last tys)
             sym <- mkStringSymbol fname
-            decl <- mkFuncDecl sym paramSorts retSort
-            mkApp decl argASTs
-        Nothing -> throwError $ "Can't find function " ++ fname
+            mkFuncDecl sym paramSorts retSort
+        Nothing -> throwError $ "Unbound variable: " ++ fname
+
+mkAppAST :: String -> [Term] -> SMT AST
+mkAppAST fname args = do
+    argASTs <- mapM mkTermAST args
+    ctx <- _funcContext <$> get
+    decl <- mkFunc fname
+    mkApp decl argASTs
 
 flattenApp (TyApp t1 t2) = flattenApp t1 ++ flattenApp t2
 flattenApp other = [other]

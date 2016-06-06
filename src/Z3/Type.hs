@@ -2,6 +2,7 @@
 
 module Z3.Type where
 
+import Z3.Monad
 import qualified Data.Map as M
 import qualified Data.Set as S
 
@@ -26,7 +27,7 @@ data Type = TyVar String
           | TySet Type
           | TyApp Type Type
           -- (declare-datatypes (T) ((BinTree (leaf (value T)) (node (left BinTree) (right BinTree)))))
-          | TyADT String
+          | TyADT Sort
           deriving (Show, Eq)
 
 data TS = TSInner Type
