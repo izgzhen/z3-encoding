@@ -2,6 +2,7 @@
 
 module Z3.Type where
 
+import Z3.Logic
 import qualified Data.Map as M
 import qualified Data.Set as S
 
@@ -24,10 +25,17 @@ data Type = TyVar String
           | TyMap Type Type
           | TySet Type
           | TyApp Type Type
-          -- (declare-datatypes (T) ((BinTree (leaf (value T)) (node (left BinTree) (right BinTree)))))
           | TyADT String
           deriving (Show, Eq)
 
 data TS = TSInner Type
         | TSForall String TS
         deriving (Show, Eq)
+
+data Assertion = AInMap Term Term Term -- K, V, M
+               | AInSet Term Term -- E, S
+               | AEq Term Term
+               | ALess Term Term
+               deriving (Show, Eq)
+
+type Z3Pred = Pred Term Type Assertion

@@ -13,7 +13,7 @@ import Control.Monad.Except (throwError)
 import qualified Data.Map as M
 import qualified Data.Set as S
 
-mkAST :: Pred -> SMT AST
+mkAST :: Z3Pred -> SMT AST
 mkAST PTrue = mkTrue
 mkAST PFalse = mkFalse
 mkAST (PConj p1 p2) = do
@@ -50,13 +50,6 @@ mkAST (PImpli p1 p2) = do
     a2 <- mkAST p2
     mkImplies a1 a2
 
-mkAST (PCmp cmpop tm1 tm2) = do
-    a1 <- mkTermAST tm1
-    a2 <- mkTermAST tm2
-    case cmpop of
-        CLess -> mkLe a1 a2
-        CEq   -> mkEq a1 a2
-
 mkAST (PAssert a) = mkAssertAST a
 
 mkAssertAST :: Assertion -> SMT AST
@@ -72,6 +65,14 @@ mkAssertAST (AInSet e s) = do
     lhs <- mkSelect sTm eTm
     one <- (mkIntSort >>= mkInt 1)
     mkEq one lhs
+mkAssertAST (AEq t1 t2) = do
+    a1 <- mkTermAST t1
+    a2 <- mkTermAST t2
+    mkEq a1 a2
+mkAssertAST (ALess t1 t2) = do
+    a1 <- mkTermAST t1
+    a2 <- mkTermAST t2
+    mkLe a1 a2
 
 mkTermAST :: Term -> SMT AST
 mkTermAST (TmVar v) = do
@@ -101,7 +102,6 @@ mkFunc fname = do
 mkAppAST :: String -> [Term] -> SMT AST
 mkAppAST fname args = do
     argASTs <- mapM mkTermAST args
-    ctx <- _funcContext <$> get
     decl <- mkFunc fname
     mkApp decl argASTs
 

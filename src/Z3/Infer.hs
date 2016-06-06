@@ -78,8 +78,8 @@ infer env expr = case expr of
             let l = S.toList s
             if length l > 0
                 then do
-                    (s, te) <- infer env (TmVal (head l))
-                    return (s, TySet te)
+                    (u, te) <- infer env (TmVal (head l))
+                    return (u, TySet te)
                 else do
                     t <- newTyVar
                     return (M.empty, TySet t)

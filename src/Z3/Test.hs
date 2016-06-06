@@ -10,7 +10,7 @@ import Control.Monad.IO.Class (liftIO)
 import qualified Data.Map as M
 import qualified Data.Set as S
 
-checkPre :: Pred -> SMT (Result, Maybe Model)
+checkPre :: Z3Pred -> SMT (Result, Maybe Model)
 checkPre pre = local $ do
     ast <- mkAST pre
     local (assert ast >> getModel)
@@ -39,7 +39,7 @@ test = flip mapM_ tests $ \(p, expected) -> do
         then putStrLn $ "√ Passed: " ++ show p
         else putStrLn $ "× Failed: " ++ show p ++ ", error: " ++ show ret
 
-tests :: [(Pred, Either String Result)]
+tests :: [(Z3Pred, Either String Result)]
 tests = [
     (PTrue, Right Sat),
     (PFalse, Right Unsat),
@@ -48,20 +48,20 @@ tests = [
     (PDisj PTrue PFalse, Right Sat),
     (PDisj PFalse PFalse, Right Unsat),
     (PNeg PFalse, Right Sat),
-    (PCmp CEq (TmVal (VInt 1)) (TmVal (VInt 1)), Right Sat),
-    (PCmp CEq (TmVal (VBool True)) (TmVal (VBool False)), Right Unsat),
+    (PAssert (AEq (TmVal (VInt 1)) (TmVal (VInt 1))), Right Sat),
+    (PAssert (AEq (TmVal (VBool True)) (TmVal (VBool False))), Right Unsat),
     (PForAll "x" TyInt PTrue, Right Sat),
-    (PExists "x" TyInt (PCmp CEq (TmVar "x") (TmVal (VInt 1))), Right Sat),
-    (PForAll "x" TyInt (PImpli (PCmp CLess (TmVar "x") (TmVal (VInt 0)))
-                               (PCmp CLess (TmVar "x") (TmVal (VInt 1)))), Right Sat),
-    (PForAll "x" TyInt (PImpli (PCmp CLess (TmVar "x") (TmVal (VInt 1)))
-                               (PCmp CLess (TmVar "x") (TmVal (VInt 0)))), Right Unsat),
+    (PExists "x" TyInt (PAssert (AEq (TmVar "x") (TmVal (VInt 1)))), Right Sat),
+    (PForAll "x" TyInt (PImpli (PAssert (ALess (TmVar "x") (TmVal (VInt 0))))
+                               (PAssert (ALess (TmVar "x") (TmVal (VInt 1))))), Right Sat),
+    (PForAll "x" TyInt (PImpli (PAssert (ALess (TmVar "x") (TmVal (VInt 1))))
+                               (PAssert (ALess (TmVar "x") (TmVal (VInt 0))))), Right Unsat),
     (PForAll "x" TyInt (PImpli PTrue PFalse), Right Unsat),
     (PAssert (AInMap (TmVal (VInt 1)) (TmVal (VInt 1))
                      (TmVal (VMap (M.singleton (VInt 1) (VInt 1))))), Right Sat),
     (PAssert (AInSet (TmVal (VInt 10))
                      (TmVal (VSet (S.singleton (VInt 10))))), Right Sat),
-    (PCmp CEq (TmVar "none") (TmVar "none"), Right Sat),
+    (PAssert (AEq (TmVar "none") (TmVar "none")), Right Sat),
     (PForAll "x" (TyADT "optionInt") PTrue, Right Sat),
-    (PCmp CEq (TmApp "just" [TmVal (VInt 1)]) (TmApp "just" [TmVal (VInt 1)]), Right Sat)
+    (PAssert (AEq (TmApp "just" [TmVal (VInt 1)]) (TmApp "just" [TmVal (VInt 1)])), Right Sat)
     ]

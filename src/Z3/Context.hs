@@ -84,6 +84,7 @@ bindQualified x idx = modify $ \ctx ->
               M.insert x idx (_qualifierContext ctx)
             }
 
+consApp :: [Type] -> Type -> Type
 consApp [] x = x
 consApp (y:ys) x = TyApp y (consApp ys x)
 

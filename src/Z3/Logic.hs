@@ -2,24 +2,13 @@
 
 module Z3.Logic where
 
-import Z3.Type
-
-data Pred = PTrue
-          | PFalse
-          | PConj Pred Pred
-          | PDisj Pred Pred
-          | PNeg Pred
-          | PForAll String Type Pred
-          | PExists String Type Pred
-          | PImpli Pred Pred
-          | PCmp CmpOp Term Term
-          | PAssert Assertion
-          deriving (Show, Eq)
-
-data Assertion = AInMap Term Term Term -- K, V, M
-               | AInSet Term Term -- E, S
-               deriving (Show, Eq)
-
-data BiOp = BPlus | BMinus deriving (Show, Eq)
-
-data CmpOp = CLess | CEq deriving (Show, Eq)
+data Pred t ty a = PTrue
+                 | PFalse
+                 | PConj (Pred t ty a) (Pred t ty a)
+                 | PDisj (Pred t ty a) (Pred t ty a)
+                 | PNeg (Pred t ty a)
+                 | PForAll String ty (Pred t ty a)
+                 | PExists String ty (Pred t ty a)
+                 | PImpli (Pred t ty a) (Pred t ty a)
+                 | PAssert a
+                 deriving (Show, Eq)
