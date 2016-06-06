@@ -10,7 +10,8 @@ data Value = VBool Bool
            | VDouble Double
            | VMap (M.Map Value Value)
            | VSet (S.Set Value)
-           -- | VADT Name [Value]
+           | VCons String [Value]
+           | VDestr String Value
            deriving (Show, Ord, Eq)
 
 data Type = TyVar String
@@ -20,7 +21,8 @@ data Type = TyVar String
           | TyString
           | TyMap Type Type
           | TySet Type
-          -- | TyADT Name (M.Map Name [Type])
+          -- (declare-datatypes (T) ((BinTree (leaf (value T)) (node (left BinTree) (right BinTree)))))
+          | TyADT String (M.Map String (M.Map String Type))
           deriving (Show, Eq)
 
 data TS = TSInner Type
