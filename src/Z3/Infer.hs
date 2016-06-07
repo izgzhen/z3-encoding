@@ -19,8 +19,8 @@ unify (TyVar x) t  = Just $ M.singleton x t
 unify t (TyVar x)  = Just $ M.singleton x t
 unify (TyMap tyk tyv) (TyMap tyk' tyv') = do
     s1 <- unify tyk tyk'
-    s2 <- unify (tyv `subst` s1) tyv'
-    return $ s1 `M.union` s2
+    s2 <- unify (tyv `subst` s1) (tyv' `subst` s1)
+    return $ s1 `compose` s2
 -- unify (TySet t) (TySet t') = unify t t'
 
 unify t1 t2 | t1 == t2  = Just M.empty
@@ -65,7 +65,7 @@ infer env expr = case expr of
                     -- t <- newTyVar
                     return (s2, TyMap t1 t2)
                     -- case unify (t1 `subst` s2) (TyMap t2 t) of
-                    --     Just v  -> return (v `unionUpdate` (s2 `unionUpdate` s1), t `subst` v)
+                    --     Just v  -> return (v `compose` (s2 `compose` s1), t `subst` v)
                     --     Nothing -> throwError $ "can't unify " ++
                     --                             "t1: " ++ show (t1 `subst` s2) ++ " with " ++
                     --                             "t2: " ++ show (TyMap t2 t)
@@ -111,8 +111,8 @@ runInfer initEnv term =
 substEnv :: M.Map String TS -> Substitution -> M.Map String TS
 substEnv e s = M.map (`substInner` s) e
 
-unionUpdate :: Ord k => M.Map k v -> M.Map k v -> M.Map k v
-unionUpdate a b = (b M.\\ a) `M.union` a
+compose :: Substitution -> Substitution -> Substitution
+compose s s' = M.map (`subst` s) s' `M.union` s
 
 tyClosure :: M.Map String TS -> Type -> TS
 tyClosure e t =
