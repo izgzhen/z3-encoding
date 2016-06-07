@@ -1,9 +1,11 @@
 module Z3.Test (spec) where
 
-import Z3.Context
-import Z3.Logic
-import Z3.Type
+import Z3.Core.Class
+import Z3.Core.Logic
+import Z3.Demo
 import Z3.Encoding
+import Z3.Z3Context
+import Z3.Assertion
 import Z3.Monad hiding (mkMap)
 
 import Control.Monad (forM_)
@@ -22,34 +24,34 @@ tests = [
     (PDisj PTrue PFalse, Right Sat),
     (PDisj PFalse PFalse, Right Unsat),
     (PNeg PFalse, Right Sat),
-    (PAssert (AEq (TmVal (VInt 1)) (TmVal (VInt 1))), Right Sat),
-    (PAssert (AEq (TmVal (VBool True)) (TmVal (VBool False))), Right Unsat),
+    (PAssert (Equal (1 :: Int) (1 :: Int)), Right Sat),
+    (PAssert (Equal True False), Right Unsat),
     (PForAll "x" TyInt PTrue, Right Sat),
-    (PExists "x" TyInt (PAssert (AEq (TmVar "x") (TmVal (VInt 1)))), Right Sat),
-    (PForAll "x" TyInt (PImpli (PAssert (ALess (TmVar "x") (TmVal (VInt 0))))
-                               (PAssert (ALess (TmVar "x") (TmVal (VInt 1))))), Right Sat),
-    (PForAll "x" TyInt (PImpli (PAssert (ALess (TmVar "x") (TmVal (VInt 1))))
-                               (PAssert (ALess (TmVar "x") (TmVal (VInt 0))))), Right Unsat),
+    (PExists "x" TyInt (PAssert (Equal (TmVar "x") (1 :: Int))), Right Sat),
+    (PForAll "x" TyInt (PImpli (PAssert (Less (TmVar "x") (0 :: Int)))
+                               (PAssert (Less (TmVar "x") (1 :: Int)))), Right Sat),
+    (PForAll "x" TyInt (PImpli (PAssert (Less (TmVar "x") (1 :: Int)))
+                               (PAssert (Less (TmVar "x") (0 :: Int)))), Right Unsat),
     (PForAll "x" TyInt (PImpli PTrue PFalse), Right Unsat),
-    (PAssert (AInMap (TmVal (VInt 1)) (TmVal (VInt 1))
-                     (TmVal (VMap (M.singleton (VInt 1) (VInt 1))))), Right Sat),
-    (PAssert (AInSet (TmVal (VInt 10))
-                     (TmVal (VSet (S.singleton (VInt 10))))), Right Sat),
-    (PAssert (AEq (TmVar "none") (TmVar "none")), Right Sat),
+    (PAssert (InMap (1 :: Int) (1 :: Int) (M.singleton (1 :: Int) 1)), Right Sat),
+    (PAssert (InSet (10 :: Int) (S.singleton (10 :: Int))), Right Sat),
+    (PAssert (Equal (TmApp "none" Nil (TyADT "optionInt"))
+                    (TmApp "none" Nil (TyADT "optionInt"))), Right Sat),
     (PForAll "x" (TyADT "optionInt") PTrue, Right Sat),
-    (PAssert (AEq (TmApp "just" [TmVal (VInt 1)]) (TmApp "just" [TmVal (VInt 1)])), Right Sat)
+    (PAssert (Equal (TmApp "just" (Cons (1 :: Int) Nil) (TyADT "optionInt"))
+                    (TmApp "just" (Cons (1 :: Int) Nil) (TyADT "optionInt"))), Right Sat)
     ]
 
-checkPre :: Z3Pred -> SMT (Result, Maybe Model)
+checkPre :: Z3Pred -> Z3SMT () (Result, Maybe Model)
 checkPre pre = local $ do
-    ast <- mkAST pre
+    ast <- encode pre
     local (assert ast >> getModel)
 
 test :: (Z3Pred, Either String Result) -> IO ()
 test (p, expected) = do
     let adts = [("optionInt", [("none", []),
                                ("just", [("val", TyInt)])])]
-    ret <- runSMT (Decls M.empty adts) $ do
+    ret <- runSMT adts () $ do
         (r, _mm) <- checkPre p
         case r of
             Unsat -> do
@@ -61,6 +63,6 @@ test (p, expected) = do
 
 spec :: Spec
 spec = forM_ tests $ (\pair@(p, expected) -> do
-         it (show p ++ " → " ++ show expected ) $
+         it {-(show p ++ " → " ++ show expected )-}"no show" $
            test pair)
 
