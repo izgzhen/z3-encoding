@@ -11,15 +11,24 @@ before_install:
   - export PATH=~/.local/bin:$PATH
   - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar -xzO --wildcards '*/stack' > ~/.local/bin/stack
   - chmod a+x ~/.local/bin/stack
+  - git clone https://github.com/izgzhen/z3-haskell ${TRAVIS_BUILD_DIR//z3-encoding/z3-haskell}
 
 matrix:
   include:
     - env: CABALVER=1.24 GHCVER=8.0.1
-      addons: {apt: {packages: [cabal-install-1.22,ghc-8.0.1],sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1], sources: [hvr-ghc]}}
 
 install:
   - stack -j 2 setup --no-terminal
   - stack -j 2 build --only-snapshot --no-terminal
 
 script:
-  - stack clean && stack test
+  - git clone git://github.com/Z3Prover/z3.git extern/z3
+  - cd extern/z3
+  - python scripts/mk_make.py  --prefix=`pwd`/install
+  - cd build
+  - make
+  - make install
+  - cd ../install/lib
+  - export LD_LIBRARY_PATH=`pwd`
+  - stack clean && stack test --extra-include-dirs $TRAVIS_BUILD_DIR/extern/z3/install/include --extra-lib-dirs $TRAVIS_BUILD_DIR/extern/z3/install/lib
