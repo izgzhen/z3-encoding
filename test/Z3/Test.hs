@@ -1,4 +1,4 @@
-module Z3.Test where
+module Z3.Test (spec) where
 
 import Z3.Context
 import Z3.Logic
@@ -6,38 +6,12 @@ import Z3.Type
 import Z3.Encoding
 import Z3.Monad hiding (mkMap)
 
+import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Map as M
 import qualified Data.Set as S
 
-checkPre :: Z3Pred -> SMT (Result, Maybe Model)
-checkPre pre = local $ do
-    ast <- mkAST pre
-    local (assert ast >> getModel)
-
-test :: IO ()
-test = flip mapM_ tests $ \(p, expected) -> do
-    let adts = [("optionInt", [("none", []),
-                               ("just", [("val", TyInt)])])]
-    ret <- runSMT (Decls M.empty adts) $ do
-        (r, _mm) <- checkPre p
-        -- case mm of
-        --     Just model -> do
-        --         modelStr <- showModel model
-        --         if length modelStr > 0 then
-        --             liftIO $ putStrLn ("Model: " ++ modelStr ++ ".")
-        --         else liftIO $ putStrLn "No model."
-        --     Nothing -> liftIO $ putStrLn "No model."
-        case r of
-            Unsat -> do
-                core <- getUnsatCore
-                liftIO $ sequence_ (map print core)
-                return r
-            other -> return other
-
-    if ret == expected
-        then putStrLn $ "√ Passed: " ++ show p
-        else putStrLn $ "× Failed: " ++ show p ++ ", error: " ++ show ret
+import Test.Hspec
 
 tests :: [(Z3Pred, Either String Result)]
 tests = [
@@ -65,3 +39,28 @@ tests = [
     (PForAll "x" (TyADT "optionInt") PTrue, Right Sat),
     (PAssert (AEq (TmApp "just" [TmVal (VInt 1)]) (TmApp "just" [TmVal (VInt 1)])), Right Sat)
     ]
+
+checkPre :: Z3Pred -> SMT (Result, Maybe Model)
+checkPre pre = local $ do
+    ast <- mkAST pre
+    local (assert ast >> getModel)
+
+test :: (Z3Pred, Either String Result) -> IO ()
+test (p, expected) = do
+    let adts = [("optionInt", [("none", []),
+                               ("just", [("val", TyInt)])])]
+    ret <- runSMT (Decls M.empty adts) $ do
+        (r, _mm) <- checkPre p
+        case r of
+            Unsat -> do
+                core <- getUnsatCore
+                liftIO $ sequence_ (map print core)
+                return r
+            other -> return other
+    ret `shouldBe` expected
+
+spec :: Spec
+spec = forM_ tests $ (\pair@(p, expected) -> do
+         it (show p ++ " → " ++ show expected ) $
+           test pair)
+
