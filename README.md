@@ -8,15 +8,15 @@ A library targeting at providing high-level, extensible, easy to use Haskell int
 ## Features
 * [x] Primitive types: boolean, integer, double precision float number
 * [x] Complex types: map, set, ADT
-* [x] Type inference
 * [x] Logic primitives and connectives: true, false, conjunction, disjunction, negation, implication
 * [x] Logic qualifiers: universal, existential
-* [x] Built-in assertions for primitive types: equality, less than 
-* [x] Built-in assertions for complex types
-* [ ] Extensible function
-* [ ] Extensible assertion
+* [x] Assertions for primitive types: equality, less than
+* [x] Assertions for complex types: membership testing
+* [x] Extensible function
+* [x] Extensible assertion
+* [ ] Static type safety
 
-And all above are provided in a declarative, composable style! See `Z3.Type` and `Z3.Logic` for details.
+And all above are provided in a *declarative, composable and eDSL* style! See `Z3.Class` and `Z3.Logic` for details.
 
 ## Usage
 1. Install `z3`, noting its `include` path and `lib` path
