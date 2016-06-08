@@ -1,24 +1,18 @@
-{-
-    izgzhen: Core.Context should provide the basic support which *can* be extended,
-    but never posing any more constraint on how it should be used. In this way,
-    we can build a layered structure which is extensible and modular.
--}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-{-# LANGUAGE ScopedTypeVariables, MultiParamTypeClasses, RankNTypes, GeneralizedNewtypeDeriving #-}
-
-module Z3.Z3Context (
+module Z3.Context (
     Z3SMT,
 ) where
 
 import Z3.Monad
-import Z3.Core.Class
+import Z3.Class
 import Z3.Encoding
 
 import Control.Monad.State
 import Control.Monad.Except
 import qualified Data.Map as M
 
-data Z3SMTContext e = Z3SMTContext {
+data SMTContext e = SMTContext {
     -- Functions
     -- _funcContext :: M.Map String Type,
     -- Bind local variables introduced by qualifiers to de brujin index in Z3
@@ -30,8 +24,8 @@ data Z3SMTContext e = Z3SMTContext {
     _extra :: e
 } deriving (Show, Eq)
 
-newtype Z3SMT e a = Z3SMT { unZ3SMT :: ExceptT String (StateT (Z3SMTContext e) Z3) a }
-    deriving (Monad, Applicative, Functor, MonadState (Z3SMTContext e), MonadIO, MonadError String)
+newtype Z3SMT e a = Z3SMT { unZ3SMT :: ExceptT String (StateT (SMTContext e) Z3) a }
+    deriving (Monad, Applicative, Functor, MonadState (SMTContext e), MonadIO, MonadError String)
 
 instance MonadZ3 (Z3SMT e) where
   getSolver  = Z3SMT (lift (lift getSolver))
@@ -69,7 +63,7 @@ instance SMT Z3SMT e where
 
             opts = opt "MODEL" True
             m = evalStateT (runExceptT (unZ3SMT smt'))
-                           (Z3SMTContext M.empty M.empty 0 e)
+                           (SMTContext M.empty M.empty 0 e)
 
     bindQualified x idx s = modify $ \ctx ->
             ctx { _qualifierContext = M.insert x (idx, s) (_qualifierContext ctx) }

@@ -2,8 +2,8 @@
 
 module Z3.Demo where
 
-import Z3.Core.Logic
-import Z3.Core.Class
+import Z3.Logic
+import Z3.Class
 import Z3.Encoding
 import Z3.Assertion
 import Z3.Monad

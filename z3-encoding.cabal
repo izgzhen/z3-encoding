@@ -15,17 +15,13 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Z3.Core.Class
+  exposed-modules:     Z3.Class
+                       Z3.Logic
                        Z3.Encoding
-                       -- Z3.Infer
-                       Z3.Core.Logic
-                       Z3.Container
-                       Z3.Demo
                        Z3.Assertion
-                       Z3.Z3Context
-                       -- Z3.Type
+                       Z3.Context
   -- other-modules:       
-  other-extensions:    LambdaCase, UndecidableInstances
+  -- other-extensions: 
   build-depends:       base >=4.9 && <4.10,
                        mtl >=2.2 && <2.3,
                        containers >=0.5 && <0.6,
@@ -33,12 +29,16 @@ library
   hs-source-dirs:      src
   default-extensions:  FlexibleInstances
                        FlexibleContexts
+                       ScopedTypeVariables
+                       MultiParamTypeClasses
+                       RankNTypes
+                       GADTs
   default-language:    Haskell2010
   ghc-options:         -Wall
 
 test-suite z3-encoding-test
   type:                exitcode-stdio-1.0
-  other-modules:       Z3.Test
+  other-modules:       Z3.Test, Z3.Demo
   hs-source-dirs:      test
   main-is:             Spec.hs
   build-depends:       base >=4.9 && <4.10
@@ -46,5 +46,5 @@ test-suite z3-encoding-test
                      , z3-encoding
                      , hspec >= 1.3
                      , containers >=0.5 && <0.6
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall
   default-language:    Haskell2010

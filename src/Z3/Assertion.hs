@@ -1,9 +1,6 @@
-{-# LANGUAGE RankNTypes, GADTs #-}
-
 module Z3.Assertion where
 
-import Z3.Core.Class
-import Z3.Container()
+import Z3.Class
 import Z3.Encoding()
 import Z3.Monad
 

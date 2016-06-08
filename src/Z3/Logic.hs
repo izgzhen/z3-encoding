@@ -1,6 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, RankNTypes, GADTs #-}
-
-module Z3.Core.Logic where
+module Z3.Logic where
 
 data Pred t ty a where
     PTrue   :: Pred t ty a
