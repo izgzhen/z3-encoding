@@ -1,4 +1,4 @@
-module Z3.Assertion where
+module Z3.Assertion (Assertion(..)) where
 
 import Z3.Class
 import Z3.Encoding()

@@ -1,21 +1,9 @@
 module Z3.Class (
-    Z3Encoded,
-    Z3Sorted,
+    Z3Encoded(..),
+    Z3Sorted(..),
     Z3Sort(..),
-    Z3Reserved,
-    sortPhantom,
-    encode,
-    sort,
-    def,
-    SMT,
-    runSMT,
-    smtError,
-    genFreshId,
-    modifyExtra,
-    getExtra,
-    getQualifierCtx,
-    getDataTypeCtx,
-    bindQualified
+    Z3Reserved(..),
+    SMT(..)
 ) where
 
 import Z3.Monad
@@ -52,8 +40,6 @@ class (MonadError String (m e), MonadZ3 (m e)) => SMT m e where
     smtError :: String -> m e a
     modifyExtra :: (e -> e) -> m e ()
 
-
-
 instance Z3Reserved Int where
     def = -1 -- XXX: Magic number
 
@@ -80,7 +66,6 @@ instance Z3Sorted Bool where
 
 instance Z3Encoded Bool where
     encode = mkBool
-
 
 instance (Z3Sorted v, Z3Encoded v) => Z3Encoded (S.Set v) where
     encode s = do

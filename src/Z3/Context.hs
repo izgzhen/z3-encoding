@@ -1,8 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Z3.Context (
-    Z3SMT,
-) where
+module Z3.Context (Z3SMT) where
 
 import Z3.Monad
 import Z3.Class
@@ -13,14 +11,13 @@ import Control.Monad.Except
 import qualified Data.Map as M
 
 data SMTContext e = SMTContext {
-    -- Functions
-    -- _funcContext :: M.Map String Type,
     -- Bind local variables introduced by qualifiers to de brujin index in Z3
     _qualifierContext :: M.Map String (AST, Sort),
     -- From name to Z3 sort
     _datatypeCtx :: M.Map String Sort,
     -- Counter used to generate globally unique ID
     _counter :: Int,
+    -- Extra field reserved for extension
     _extra :: e
 } deriving (Show, Eq)
 
@@ -30,22 +27,6 @@ newtype Z3SMT e a = Z3SMT { unZ3SMT :: ExceptT String (StateT (SMTContext e) Z3)
 instance MonadZ3 (Z3SMT e) where
   getSolver  = Z3SMT (lift (lift getSolver))
   getContext = Z3SMT (lift (lift getContext))
-
--- instance Monad (Z3SMT e) where
---   return = Z3SMT . return
-
--- instance MonadIO (Z3SMT e) where
---     liftIO = Z3SMT . liftIO
-
--- instance Applicative (Z3SMT e) where
---   pure = Z3SMT . pure
---    -- (<*>) :: f (a -> b) -> f a -> f b
---    -- (*>) :: f a -> f b -> f b
---    -- (<*) :: f a -> f b -> f a
-
--- instance MonadError String (Z3SMT e) where
---  throwError = Z3SMT . throwError
---  catchError = Z3SMT . catchError
 
 instance SMT Z3SMT e where
     genFreshId = do
