@@ -13,12 +13,16 @@ import qualified Data.Map as M
 data Term = TmVar String
           | TmApp String HeteroList Type
 
+deriving instance Eq Term
+
 data Type = TyBool
           | TyInt
           | TyDouble
           | TyMap Type Type
           | TySet Type
           | TyADT String
+
+deriving instance Eq Type
 
 type Z3Pred = Pred Term Type Assertion
 
