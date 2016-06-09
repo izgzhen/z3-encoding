@@ -9,6 +9,7 @@ data Pred t ty a where
     PNeg    :: Pred t ty a -> Pred t ty a
     PForAll :: String -> ty -> Pred t ty a -> Pred t ty a
     PExists :: String -> ty -> Pred t ty a -> Pred t ty a
+    PExists2 :: String -> String -> ty -> Pred t ty a -> Pred t ty a
     PImpli  :: Pred t ty a -> Pred t ty a -> Pred t ty a
     PIff    :: Pred t ty a -> Pred t ty a -> Pred t ty a
     PAssert :: a -> Pred t ty a

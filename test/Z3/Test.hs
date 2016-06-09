@@ -44,13 +44,13 @@ tests = [
                                (PAssert $ GreaterE (TmSub (TmSub (TmVar "x") (TmNum 2)) (TmNum 1)) (0 :: Int)), Right Sat),
     (PExists "x" TyInt $ PConj (PAssert $ Less (TmVar "x") (TmNum 0))
                                (PNeg $ PAssert $ LessE (TmVar "x") (TmNum 0)), Right Unsat),
-    (PExists "x" TyInt $ PExists "y" TyInt $ PConj (PAssert $ Greater (TmIf (TmLE (TmVar "x") (TmVar "y")) (TmVar "x") (TmVar "y")) $ TmVar "x")
-                                                   (PAssert $ Greater (TmIf (TmLE (TmVar "x") (TmVar "y")) (TmVar "x") (TmVar "y")) $ TmVar "y"), Right Sat),
-    (PExists "x" TyInt $ PExists "y" TyInt $ PConj (PConj (PAssert $ LessE (TmVar "x") $ TmNum 3)
-                                                          (PAssert $ LessE (TmVar "y") $ TmNum 3))
-                                                   (PAssert $ GreaterE (TmAdd (TmVar "x") (TmVar "y")) $ TmNum 9), Right Unsat)
-    (PExists "x" TyInt $ PExists "y" TyInt $ PNeg $ PConj (PAssert $ GreaterE (TmIf (TmLE (TmVar "x") (TmVar "y")) (TmVar "x") (TmVar "y")) $ TmVar "x")
-                                                          (PAssert $ GreaterE (TmIf (TmLE (TmVar "x") (TmVar "y")) (TmVar "x") (TmVar "y")) $ TmVar "y"), Right Sat)
+    (PExists2 "x" "y" TyInt $ PConj (PAssert $ GreaterE (TmIf (TmLE (TmVar "x") (TmVar "y")) (TmVar "x") (TmVar "y")) $ TmVar "x")
+                                    (PAssert $ GreaterE (TmIf (TmLE (TmVar "x") (TmVar "y")) (TmVar "x") (TmVar "y")) $ TmVar "y"), Right Sat),
+    (PExists2 "x" "y" TyInt $ PConj (PConj (PAssert $ LessE (TmVar "x") $ TmNum 3)
+                                           (PAssert $ LessE (TmVar "y") $ TmNum 3))
+                                    (PAssert $ GreaterE (TmAdd (TmVar "x") (TmVar "y")) $ TmNum 9), Right Unsat),
+    (PExists2 "x" "y" TyInt $ PNeg $ PConj (PAssert $ GreaterE (TmIf (TmLE (TmVar "x") (TmVar "y")) (TmVar "x") (TmVar "y")) $ TmVar "x")
+                                           (PAssert $ GreaterE (TmIf (TmLE (TmVar "x") (TmVar "y")) (TmVar "x") (TmVar "y")) $ TmVar "y"), Right Sat)
     ]
 
 checkPre :: Z3Pred -> Z3SMT () (Result, Maybe Model)

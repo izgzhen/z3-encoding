@@ -147,6 +147,18 @@ instance (Z3Sorted t, Z3Sorted ty, Z3Encoded a) => Z3Encoded (Pred t ty a) where
             a <- encode p
             mkExists [] [sym] [xsort] a
 
+    encode (PExists2 x y ty p) = do
+        sym1 <- mkStringSymbol x
+        sym2 <- mkStringSymbol y
+        xsort <- sort ty
+        idx1 <- mkBound 0 xsort
+        idx2 <- mkBound 1 xsort
+        local $ do
+            bindQualified x idx1 xsort
+            bindQualified y idx2 xsort
+            a <- encode p
+            mkExists [] [sym1, sym2] [xsort, xsort] a
+
     encode (PImpli p1 p2) = do
         a1 <- encode p1
         a2 <- encode p2
