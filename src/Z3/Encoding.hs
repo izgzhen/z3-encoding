@@ -1,6 +1,14 @@
+-- |
+-- Prviding some Z3 encoding for certain language constructs
+-- Require a Class.SMT context to work
+
 module Z3.Encoding (
+  -- ** Heterogenous list, a hack to encode different "term" into a list
+  -- Used to encode function argument list
   HeteroList(..),
+  -- ** encode function application
   encodeApp,
+  -- ** encode datatype definition
   encodeDataType
 ) where
 
@@ -32,6 +40,7 @@ encodeDataType :: SMT m e => Z3Sorted ty => (String, [(String, [(String, ty)])])
 encodeDataType (tyName, alts) = do
     constrs <- mapM (\(consName, fields) -> do
                         consSym <- mkStringSymbol consName
+                        -- recognizer. e.g. is_None None = True, is_None (Some _) = False
                         recogSym <- mkStringSymbol ("is_" ++ consName)
                         flds <- flip mapM fields $ \(fldName, fldTy) -> do
                             symFld <- mkStringSymbol fldName

@@ -1,3 +1,5 @@
+-- | Predicates
+
 module Z3.Logic (Pred(..)) where
 
 data Pred t ty a where

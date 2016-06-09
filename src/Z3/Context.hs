@@ -1,5 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
+-- | A concrete context implement SMT provided *for convenience*
+
 module Z3.Context (Z3SMT) where
 
 import Z3.Monad
@@ -11,13 +13,13 @@ import Control.Monad.Except
 import qualified Data.Map as M
 
 data SMTContext e = SMTContext {
-    -- Bind local variables introduced by qualifiers to de brujin index in Z3
+    -- | Bind local variables introduced by qualifiers to de brujin index in Z3
     _qualifierContext :: M.Map String (AST, Sort),
-    -- From name to Z3 sort
+    -- | From type name to Z3 sort
     _datatypeCtx :: M.Map String Sort,
-    -- Counter used to generate globally unique ID
+    -- | Counter used to generate globally unique ID
     _counter :: Int,
-    -- Extra field reserved for extension
+    -- | Extra field reserved for extension
     _extra :: e
 } deriving (Show, Eq)
 
@@ -42,6 +44,7 @@ instance SMT Z3SMT e where
                 modify $ \ctx -> ctx { _datatypeCtx = datatypeCtx }
                 smt
 
+            -- XXX: not sure what does this option mean
             opts = opt "MODEL" True
             m = evalStateT (runExceptT (unZ3SMT smt'))
                            (SMTContext M.empty M.empty 0 e)
@@ -54,7 +57,5 @@ instance SMT Z3SMT e where
     getDataTypeCtx = _datatypeCtx <$> get
 
     getExtra = _extra <$> get
-
-    smtError = throwError
 
     modifyExtra f = modify $ \ctx -> ctx { _extra = f (_extra ctx) }
