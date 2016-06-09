@@ -1,6 +1,8 @@
 z3-encoding
 =====
 
+[![Join the chat at https://gitter.im/izgzhen/z3-encoding](https://badges.gitter.im/izgzhen/z3-encoding.svg)](https://gitter.im/izgzhen/z3-encoding?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://travis-ci.org/izgzhen/z3-encoding.svg?branch=master)](https://travis-ci.org/izgzhen/z3-encoding)
 
 A library targeting at providing high-level, extensible, easy to use Haskell interface to [Z3 solver](http://research.microsoft.com/en-us/um/redmond/projects/z3/).
