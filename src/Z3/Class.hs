@@ -121,6 +121,12 @@ instance (Z3Sorted t, Z3Sorted ty, Z3Encoded a) => Z3Encoded (Pred t ty a) where
         a1 <- encode p1
         a2 <- encode p2
         mkOr [a1, a2]
+
+    encode (PXor p1 p2) = do
+        a1 <- encode p1
+        a2 <- encode p2
+        mkXor a1 a2
+
     encode (PNeg p) = encode p >>= mkNot
 
     encode (PForAll x ty p) = do
@@ -145,5 +151,10 @@ instance (Z3Sorted t, Z3Sorted ty, Z3Encoded a) => Z3Encoded (Pred t ty a) where
         a1 <- encode p1
         a2 <- encode p2
         mkImplies a1 a2
+
+    encode (PIff p1 p2) = do
+        a1 <- encode p1
+        a2 <- encode p2
+        mkIff a1 a2
 
     encode (PAssert a) = encode a

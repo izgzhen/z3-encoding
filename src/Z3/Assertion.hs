@@ -8,10 +8,13 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 
 data Assertion where
-    InMap :: forall k v. (Z3Sorted k, Z3Encoded k, Z3Sorted v, Z3Reserved v) => k -> v -> M.Map k v -> Assertion
-    InSet :: forall v. (Z3Encoded v, Z3Sorted v) => v -> S.Set v -> Assertion
-    Equal :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Assertion
-    Less  :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Assertion
+    InMap    :: forall k v. (Z3Sorted k, Z3Encoded k, Z3Sorted v, Z3Reserved v) => k -> v -> M.Map k v -> Assertion
+    InSet    :: forall v. (Z3Encoded v, Z3Sorted v) => v -> S.Set v -> Assertion
+    Equal    :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Assertion
+    LessE    :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Assertion
+    GreaterE :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Assertion
+    Less     :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Assertion
+    Greater  :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Assertion
 
 instance Z3Encoded Assertion where
     encode (InMap k v m) = do
@@ -30,7 +33,19 @@ instance Z3Encoded Assertion where
         a1 <- encode t1
         a2 <- encode t2
         mkEq a1 a2
-    encode (Less t1 t2) = do
+    encode (LessE t1 t2) = do
         a1 <- encode t1
         a2 <- encode t2
         mkLe a1 a2
+    encode (GreaterE t1 t2) = do
+        a1 <- encode t1
+        a2 <- encode t2
+        mkGe a1 a2
+    encode (Less t1 t2) = do
+        a1 <- encode t1
+        a2 <- encode t2
+        mkLt a1 a2
+    encode (Greater t1 t2) = do
+        a1 <- encode t1
+        a2 <- encode t2
+        mkGt a1 a2

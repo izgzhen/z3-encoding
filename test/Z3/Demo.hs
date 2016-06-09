@@ -10,8 +10,20 @@ import Z3.Monad
 
 import qualified Data.Map as M
 
-data Term = TmVar String
-          | TmApp String HeteroList Type
+data Term = TmVar   String
+          | TmNum   Int
+          | TmBool  Bool
+          | TmLE    Term Term
+          | TmGE    Term Term
+          | TmSub   Term Term
+          | TmAdd   Term Term
+          | TmMul   Term Term
+          | TmDiv   Term Term
+          | TmMod   Term Term
+          | TmRem   Term Term
+          | TmMinus Term
+          | TmIf    Term Term Term
+          | TmApp   String HeteroList Type
 
 deriving instance Eq Term
 
@@ -32,6 +44,42 @@ instance Z3Encoded Term where
         case M.lookup x ctx of
             Just (idx, _) -> return idx
             Nothing -> smtError $ "Can't find variable " ++ x
+    encode (TmNum n) = mkIntSort >>= mkInt n
+    encode (TmBool b) = mkBool b
+    encode (TmLE t1 t2) = encode (LessE t1 t2)
+    encode (TmGE t1 t2) = encode (GreaterE t1 t2)
+    encode (TmAdd t1 t2) = do
+        a1 <- encode t1
+        a2 <- encode t2
+        mkAdd [a1, a2]
+    encode (TmSub t1 t2) = do
+        a1 <- encode t1
+        a2 <- encode t2
+        mkSub [a1, a2]
+    encode (TmMul t1 t2) = do
+        a1 <- encode t1
+        a2 <- encode t2
+        mkMul [a1, a2]
+    encode (TmDiv t1 t2) = do
+        a1 <- encode t1
+        a2 <- encode t2
+        mkDiv a1 a2
+    encode (TmMod t1 t2) = do
+        a1 <- encode t1
+        a2 <- encode t2
+        mkMod a1 a2
+    encode (TmRem t1 t2) = do
+        a1 <- encode t1
+        a2 <- encode t2
+        mkRem a1 a2
+    encode (TmMinus t) = do
+        a <- encode t
+        mkUnaryMinus a
+    encode (TmIf p c a) = do
+        a1 <- encode p
+        a2 <- encode c
+        a3 <- encode a
+        mkIte a1 a2 a3
     encode (TmApp fname args retty) = do
       retSort <- sort retty
       encodeApp fname args retSort
@@ -42,6 +90,18 @@ instance Z3Sorted Term where
         case M.lookup x ctx of
             Just (_, s) -> return s
             Nothing -> smtError $ "Can't find variable " ++ x
+    sort (TmNum _) = mkIntSort
+    sort (TmBool _) = mkBoolSort
+    sort (TmLE _ _) = mkBoolSort
+    sort (TmGE _ _) = mkBoolSort
+    sort (TmAdd _ _) = mkIntSort
+    sort (TmSub _ _) = mkIntSort
+    sort (TmMul _ _) = mkIntSort
+    sort (TmDiv _ _) = mkIntSort
+    sort (TmMod _ _) = mkIntSort
+    sort (TmRem _ _) = mkIntSort
+    sort (TmMinus _) = mkIntSort
+    sort (TmIf _ c _) = sort c
     sort (TmApp _ _ retty) = sort retty
 
 instance Z3Sorted Type where
