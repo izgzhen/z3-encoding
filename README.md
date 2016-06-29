@@ -30,7 +30,8 @@ And all above are provided in a *declarative, composable and eDSL* style! See `Z
     * `extra-lib-dirs`
 
 ## Upstream
-Currently, it supports [z3 v4.4.1](https://github.com/Z3Prover/z3), which is bound through a low-level Haskell library [z3-haskell](https://hackage.haskell.org/package/z3). z3-haskell is not updated to be compatible with the newest z3 release, so you might need to use [my own fork](https://github.com/izgzhen/z3-haskell) to make things work.
+Currently, it supports [latest z3](https://github.com/Z3Prover/z3), which is bound through a low-level Haskell library [z3-haskell](https://hackage.haskell.org/package/z3). z3-haskell is not updated to be compatible with the cutting-edge z3, so you might need to use [my own fork](https://github.com/izgzhen/z3-haskell) to make things work.
 
 Also, current version of this package supports the newest GHC (8.0.1).
 
+TODO: Revert back to stable z3.
