@@ -21,17 +21,13 @@ A library targeting at providing high-level, extensible, easy to use Haskell int
 And all above are provided in a *declarative, composable and eDSL* style! See `Z3.Class` and `Z3.Logic` for details.
 
 ## Usage
-1. Install `z3`, noting its `include` path and `lib` path
-2. `git clone https://github.com/izgzhen/z3-haskell`
+1. Install `z3`, noting its `include` path and `lib` path as specified by `prefix=`
 3. `git clone https://github.com/izgzhen/z3-encoding`
 4. Adapt `z3-encoding/stack.yaml` to your specific condition, esp.:
-    * `packages`
     * `extra-include-dirs`
     * `extra-lib-dirs`
 
 ## Upstream
-Currently, it supports [latest z3](https://github.com/Z3Prover/z3), which is bound through a low-level Haskell library [z3-haskell](https://hackage.haskell.org/package/z3). z3-haskell is not updated to be compatible with the cutting-edge z3, so you might need to use [my own fork](https://github.com/izgzhen/z3-haskell) to make things work.
+Currently, it supports [z3 v4.4.1](https://github.com/Z3Prover/z3/releases), through a low-level Haskell library [z3-haskell](https://hackage.haskell.org/package/z3).
 
-Also, current version of this package supports the newest GHC (8.0.1).
-
-TODO: Revert back to stable z3.
+Also, current version of this package supports the GHC v8.0.1.

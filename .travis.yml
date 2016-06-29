@@ -11,7 +11,6 @@ before_install:
   - export PATH=~/.local/bin:$PATH
   - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar -xzO --wildcards '*/stack' > ~/.local/bin/stack
   - chmod a+x ~/.local/bin/stack
-  - git clone https://github.com/izgzhen/z3-haskell ${TRAVIS_BUILD_DIR//z3-encoding/z3-haskell}
 
 matrix:
   include:
@@ -23,8 +22,10 @@ install:
   - stack -j 2 build --only-snapshot --no-terminal
 
 script:
-  - git clone git://github.com/Z3Prover/z3.git extern/z3
-  - cd extern/z3
+  - mkdir extern
+  - wget https://github.com/Z3Prover/z3/archive/z3-4.4.1.zip
+  - unzip z3-4.4.1.zip
+  - cd z3-z3-4.4.1
   - python scripts/mk_make.py  --prefix=`pwd`/install
   - cd build
   - make

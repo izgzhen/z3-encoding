@@ -37,11 +37,11 @@ resolver: nightly-2016-06-04
 # will not be run. This is useful for tweaking upstream packages.
 packages:
 - '.'
-- '../z3-haskell'
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps: []
+extra-deps:
+- z3-4.1.0
 
 # Override default flag values for local packages and extra-deps
 flags: {}
