@@ -1,6 +1,7 @@
--- Demo of how to instantiate the Pred
+-- Sealed layer for out-of-box use
+{-# LANGUAGE StandaloneDeriving #-}
 
-module Z3.Demo where
+module Z3.Z3Pred where
 
 import Z3.Base.Logic
 import Z3.Base.Class

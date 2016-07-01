@@ -2,7 +2,7 @@ module Z3.Test (spec) where
 
 import Z3.Base.Class
 import Z3.Base.Logic
-import Z3.Demo
+import Z3.Z3Pred
 import Z3.Base.Encoding
 import Z3.Context
 import Z3.Base.Atom
