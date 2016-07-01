@@ -2,10 +2,10 @@
 
 module Z3.Demo where
 
-import Z3.Logic
-import Z3.Class
-import Z3.Encoding
-import Z3.Assertion
+import Z3.Base.Logic
+import Z3.Base.Class
+import Z3.Base.Encoding
+import Z3.Base.Atom
 import Z3.Monad
 
 import qualified Data.Map as M
@@ -36,7 +36,7 @@ data Type = TyBool
 
 deriving instance Eq Type
 
-type Z3Pred = Pred Term Type Assertion
+type Z3Pred = Pred Term Type ()
 
 instance Z3Encoded Term where
     encode (TmVar x) = do
@@ -121,3 +121,5 @@ instance Z3Sorted Type where
       case M.lookup tyName ctx of
           Just s  -> return s
           Nothing -> smtError $ "Undefined type: " ++ tyName
+
+instance Z3Encoded () where

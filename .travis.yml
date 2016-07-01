@@ -22,7 +22,6 @@ install:
   - stack -j 2 build --only-snapshot --no-terminal
 
 script:
-  - mkdir extern
   - wget https://github.com/Z3Prover/z3/archive/z3-4.4.1.zip
   - unzip z3-4.4.1.zip
   - cd z3-z3-4.4.1
@@ -32,4 +31,4 @@ script:
   - make install
   - cd ../install/lib
   - export LD_LIBRARY_PATH=`pwd`
-  - stack clean && stack test --extra-include-dirs $TRAVIS_BUILD_DIR/extern/z3/install/include --extra-lib-dirs $TRAVIS_BUILD_DIR/extern/z3/install/lib
+  - stack clean && stack test --extra-include-dirs $TRAVIS_BUILD_DIR/z3-z3-4.4.1/install/include --extra-lib-dirs $TRAVIS_BUILD_DIR/z3-z3-4.4.1/install/lib

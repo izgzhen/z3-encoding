@@ -2,7 +2,7 @@
 -- Type classes and built-in implementation for primitive Haskell types
 -- 
 
-module Z3.Class (
+module Z3.Base.Class (
     -- ** Types whose values are encodable to Z3 internal AST
     Z3Encoded(..),
     -- ** Types representable as Z3 Sort
@@ -19,7 +19,6 @@ module Z3.Class (
 ) where
 
 import Z3.Monad
-import Z3.Logic
 
 import Control.Monad.Except
 
@@ -151,73 +150,3 @@ instance Z3Sorted v => Z3Sorted (S.Set v) where
         sortElem <- sortPhantom (Z3Sort :: Z3Sort v)
         intSort <- mkIntSort
         mkArraySort sortElem intSort
-
-instance (Z3Sorted t, Z3Sorted ty, Z3Encoded a) => Z3Encoded (Pred t ty a) where
-    encode PTrue = mkTrue
-    encode PFalse = mkFalse
-    encode (PConj p1 p2) = do
-        a1 <- encode p1
-        a2 <- encode p2
-        mkAnd [a1, a2]
-
-    encode (PDisj p1 p2) = do
-        a1 <- encode p1
-        a2 <- encode p2
-        mkOr [a1, a2]
-
-    encode (PXor p1 p2) = do
-        a1 <- encode p1
-        a2 <- encode p2
-        mkXor a1 a2
-
-    encode (PNeg p) = encode p >>= mkNot
-
-    encode (PForAll x ty p) = do
-        sym <- mkStringSymbol x
-        xsort <- sort ty
-        -- "0" is de brujin idx for current binder
-        -- it is passed to Z3 which returns an intenal (idx :: AST)
-        -- This (idx :: AST) will be used to replace the variable
-        -- in the abstraction body when encountered, thus it is stored
-        -- in context by bindQualified we provide
-        -- XXX: we should save and restore qualifier context here
-        idx <- mkBound 0 xsort
-        local $ do
-            bindQualified x idx xsort
-            body <- encode p
-            -- The first [] is [Pattern], which is not really useful here
-            mkForall [] [sym] [xsort] body
-
-    encode (PExists x ty p) = do
-        sym <- mkStringSymbol x
-        xsort <- sort ty
-        idx <- mkBound 0 xsort
-        local $ do
-            bindQualified x idx xsort
-            a <- encode p
-            mkExists [] [sym] [xsort] a
-
-    -- HACK
-    encode (PExists2 x y ty p) = do
-        sym1 <- mkStringSymbol x
-        sym2 <- mkStringSymbol y
-        xsort <- sort ty
-        idx1 <- mkBound 0 xsort
-        idx2 <- mkBound 1 xsort
-        local $ do
-            bindQualified x idx1 xsort
-            bindQualified y idx2 xsort
-            a <- encode p
-            mkExists [] [sym1, sym2] [xsort, xsort] a
-
-    encode (PImpli p1 p2) = do
-        a1 <- encode p1
-        a2 <- encode p2
-        mkImplies a1 a2
-
-    encode (PIff p1 p2) = do
-        a1 <- encode p1
-        a2 <- encode p2
-        mkIff a1 a2
-
-    encode (PAssert a) = encode a

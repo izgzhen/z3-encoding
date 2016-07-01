@@ -2,23 +2,28 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                z3-encoding
-version:             0.2.1.1
--- synopsis:            
--- description:         
+version:             0.2.2.0
+synopsis:            High-level assertion encoding to Z3 solver
+description:
+  A library targeting at providing high-level, extensible, easy to use Haskell interface to Z3 solver.
 license:             MIT
 license-file:        LICENSE
-author:              Zhen Zhang
-maintainer:          izgzhen@gmail.com
+author:              Zhen Zhang <izgzhen@gmail.com>
+maintainer:          Zhen Zhang <izgzhen@gmail.com>
 -- copyright:           
 category:            Language
 build-type:          Simple
 cabal-version:       >=1.10
 
+source-repository head
+  type:     git
+  location: https://github.com/izgzhen/z3-encoding
+
 library
-  exposed-modules:     Z3.Class
-                       Z3.Logic
-                       Z3.Encoding
-                       Z3.Assertion
+  exposed-modules:     Z3.Base.Class
+                       Z3.Base.Logic
+                       Z3.Base.Encoding
+                       Z3.Base.Atom
                        Z3.Context
   -- other-modules:       
   -- other-extensions: 

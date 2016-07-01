@@ -5,8 +5,8 @@
 module Z3.Context (Z3SMT) where
 
 import Z3.Monad
-import Z3.Class
-import Z3.Encoding
+import Z3.Base.Class
+import Z3.Base.Encoding
 
 import Control.Monad.State
 import Control.Monad.Except
