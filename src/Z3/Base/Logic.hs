@@ -44,26 +44,26 @@ instance (Z3Sorted t, Z3Sorted ty, Z3Encoded a) => Z3Encoded (Pred t ty a) where
 
     encode (PForAll x ty p) = do
         sym <- mkStringSymbol x
-        xsort <- sort ty
+        xsort <- sortOf ty
         -- "0" is de brujin idx for current binder
         -- it is passed to Z3 which returns an intenal (idx :: AST)
         -- This (idx :: AST) will be used to replace the variable
         -- in the abstraction body when encountered, thus it is stored
-        -- in context by bindQualified we provide
+        -- in context by bindVal we provide
         -- XXX: we should save and restore qualifier context here
         idx <- mkBound 0 xsort
         local $ do
-            bindQualified x idx xsort
+            bindVal x idx xsort
             body <- encode p
             -- The first [] is [Pattern], which is not really useful here
             mkForall [] [sym] [xsort] body
 
     encode (PExists x ty p) = do
         sym <- mkStringSymbol x
-        xsort <- sort ty
+        xsort <- sortOf ty
         idx <- mkBound 0 xsort
         local $ do
-            bindQualified x idx xsort
+            bindVal x idx xsort
             a <- encode p
             mkExists [] [sym] [xsort] a
 
@@ -71,12 +71,12 @@ instance (Z3Sorted t, Z3Sorted ty, Z3Encoded a) => Z3Encoded (Pred t ty a) where
     encode (PExists2 x y ty p) = do
         sym1 <- mkStringSymbol x
         sym2 <- mkStringSymbol y
-        xsort <- sort ty
+        xsort <- sortOf ty
         idx1 <- mkBound 0 xsort
         idx2 <- mkBound 1 xsort
         local $ do
-            bindQualified x idx1 xsort
-            bindQualified y idx2 xsort
+            bindVal x idx1 xsort
+            bindVal y idx2 xsort
             a <- encode p
             mkExists [] [sym1, sym2] [xsort, xsort] a
 

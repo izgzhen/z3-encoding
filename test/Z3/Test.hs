@@ -62,7 +62,7 @@ test :: (Z3Pred, Either String Result) -> IO ()
 test (p, expected) = do
     let adts = [("optionInt", [("none", []),
                                ("just", [("val", TyInt)])])]
-    ret <- runSMT adts () $ do
+    ret <- runSMT emptyValBindings adts () $ do
         (r, _mm) <- checkPre p
         case r of
             Unsat -> do

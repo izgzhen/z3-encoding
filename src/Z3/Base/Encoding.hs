@@ -3,9 +3,6 @@
 -- Require a Class.SMT context to work
 
 module Z3.Base.Encoding (
-  -- ** Heterogenous list, a hack to encode different "term" into a list
-  -- Used to encode function argument list
-  HeteroList(..),
   -- ** encode function application
   encodeApp,
   -- ** encode datatype definition
@@ -15,22 +12,9 @@ module Z3.Base.Encoding (
 import Z3.Base.Class
 import Z3.Monad hiding (mkMap, App)
 
-data HeteroList where
-    Cons :: forall a. (Z3Sorted a, Z3Encoded a) => a -> HeteroList -> HeteroList
-    Nil :: HeteroList
-
-instance Eq HeteroList where
-  Nil == Nil = True
-  Cons _ h1 == Cons _ h2 = h1 == h2
-  _ == _ = False
-
-mapH :: (forall a. (Z3Sorted a, Z3Encoded a) => a -> b) -> HeteroList -> [b]
-mapH _ Nil = []
-mapH f (Cons a l) = f a : mapH f l
-
 encodeApp :: SMT m e => String -> HeteroList -> Sort -> m e AST
 encodeApp fname args retSort = do
-    paramSorts <- sequence $ mapH sort args
+    paramSorts <- sequence $ mapH sortOf args
     sym <- mkStringSymbol fname
     decl <- mkFuncDecl sym paramSorts retSort
     argASTs <- sequence $ mapH encode args
@@ -44,7 +28,7 @@ encodeDataType (tyName, alts) = do
                         recogSym <- mkStringSymbol ("is_" ++ consName)
                         flds <- flip mapM fields $ \(fldName, fldTy) -> do
                             symFld <- mkStringSymbol fldName
-                            s <- sort fldTy
+                            s <- sortOf fldTy
                             return (symFld, Just s, -1) -- XXX: non-rec
                         mkConstructor consSym recogSym flds
                     ) alts

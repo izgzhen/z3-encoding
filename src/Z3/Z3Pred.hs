@@ -41,7 +41,7 @@ type Z3Pred = Pred Term Type ()
 
 instance Z3Encoded Term where
     encode (TmVar x) = do
-        ctx <- getQualifierCtx
+        ctx <- getValBindCtx
         case M.lookup x ctx of
             Just (idx, _) -> return idx
             Nothing -> smtError $ "Can't find variable " ++ x
@@ -82,42 +82,42 @@ instance Z3Encoded Term where
         a3 <- encode a
         mkIte a1 a2 a3
     encode (TmApp fname args retty) = do
-      retSort <- sort retty
+      retSort <- sortOf retty
       encodeApp fname args retSort
 
 instance Z3Sorted Term where
-    sort (TmVar x) = do
-        ctx <- getQualifierCtx
+    sortOf (TmVar x) = do
+        ctx <- getValBindCtx
         case M.lookup x ctx of
             Just (_, s) -> return s
             Nothing -> smtError $ "Can't find variable " ++ x
-    sort (TmNum _) = mkIntSort
-    sort (TmBool _) = mkBoolSort
-    sort (TmLE _ _) = mkBoolSort
-    sort (TmGE _ _) = mkBoolSort
-    sort (TmAdd _ _) = mkIntSort
-    sort (TmSub _ _) = mkIntSort
-    sort (TmMul _ _) = mkIntSort
-    sort (TmDiv _ _) = mkIntSort
-    sort (TmMod _ _) = mkIntSort
-    sort (TmRem _ _) = mkIntSort
-    sort (TmMinus _) = mkIntSort
-    sort (TmIf _ c _) = sort c
-    sort (TmApp _ _ retty) = sort retty
+    sortOf (TmNum _) = mkIntSort
+    sortOf (TmBool _) = mkBoolSort
+    sortOf (TmLE _ _) = mkBoolSort
+    sortOf (TmGE _ _) = mkBoolSort
+    sortOf (TmAdd _ _) = mkIntSort
+    sortOf (TmSub _ _) = mkIntSort
+    sortOf (TmMul _ _) = mkIntSort
+    sortOf (TmDiv _ _) = mkIntSort
+    sortOf (TmMod _ _) = mkIntSort
+    sortOf (TmRem _ _) = mkIntSort
+    sortOf (TmMinus _) = mkIntSort
+    sortOf (TmIf _ c _) = sortOf c
+    sortOf (TmApp _ _ retty) = sortOf retty
 
 instance Z3Sorted Type where
-    sort TyBool     = mkBoolSort
-    sort TyInt      = mkIntSort
-    sort TyDouble   = mkRealSort
-    sort (TyMap ty1 ty2) = do
-        s1 <- sort ty1
-        s2 <- sort ty2
+    sortOf TyBool     = mkBoolSort
+    sortOf TyInt      = mkIntSort
+    sortOf TyDouble   = mkRealSort
+    sortOf (TyMap ty1 ty2) = do
+        s1 <- sortOf ty1
+        s2 <- sortOf ty2
         mkArraySort s1 s2
-    sort (TySet ty) = do
-        s <- sort ty
+    sortOf (TySet ty) = do
+        s <- sortOf ty
         intSort <- mkIntSort
         mkArraySort s intSort
-    sort (TyADT tyName)  = do
+    sortOf (TyADT tyName)  = do
       ctx <- getDataTypeCtx
       case M.lookup tyName ctx of
           Just s  -> return s

@@ -14,7 +14,7 @@ import qualified Data.Map as M
 
 data SMTContext e = SMTContext {
     -- | Bind local variables introduced by qualifiers to de brujin index in Z3
-    _qualifierContext :: M.Map String (AST, Sort),
+    _valBindCtx :: M.Map String (AST, Sort),
     -- | From type name to Z3 sort
     _datatypeCtx :: M.Map String Sort,
     -- | Counter used to generate globally unique ID
@@ -36,12 +36,20 @@ instance SMT Z3SMT e where
         modify (\ctx -> ctx { _counter = i + 1 })
         return i
 
-    runSMT datatypes e smt = evalZ3With Nothing opts m
+    runSMT initialBindings datatypes e smt = evalZ3With Nothing opts m
         where
+            bind (x:xs, Cons v vs) = do
+                ast <- encode v
+                st <- sortOf v
+                bindVal x ast st
+                bind (xs, vs)
+            bind _ = return ()
+
             smt' = do
                 sorts <- mapM encodeDataType datatypes
                 let datatypeCtx = M.fromList (zip (map fst datatypes) sorts)
                 modify $ \ctx -> ctx { _datatypeCtx = datatypeCtx }
+                bind initialBindings
                 smt
 
             -- XXX: not sure what does this option mean
@@ -49,10 +57,10 @@ instance SMT Z3SMT e where
             m = evalStateT (runExceptT (unZ3SMT smt'))
                            (SMTContext M.empty M.empty 0 e)
 
-    bindQualified x idx s = modify $ \ctx ->
-            ctx { _qualifierContext = M.insert x (idx, s) (_qualifierContext ctx) }
+    bindVal x ast st = modify $ \ctx ->
+            ctx { _valBindCtx = M.insert x (ast, st) (_valBindCtx ctx) }
 
-    getQualifierCtx = _qualifierContext <$> get
+    getValBindCtx = _valBindCtx <$> get
 
     getDataTypeCtx = _datatypeCtx <$> get
 
