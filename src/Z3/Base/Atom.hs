@@ -1,33 +1,31 @@
 -- |
--- Assertions provided by libraries *for convenience*
--- It is not hard-coded into Z3.Logic.Pred
+-- Atomic predicates
 --
 
-module Z3.Assertion (Assertion(..)) where
+module Z3.Base.Atom (Atom(..)) where
 
-import Z3.Class
-import Z3.Encoding()
+import Z3.Base.Class
 import Z3.Monad
 
 import qualified Data.Map as M
 import qualified Data.Set as S
 
-data Assertion where
+data Atom where
     -- | k is mapped to v in (m :: M.Map k v)
     -- XXX: m should be any "term", too strong now
-    InMap    :: forall k v. (Z3Sorted k, Z3Encoded k, Z3Sorted v, Z3Reserved v) => k -> v -> M.Map k v -> Assertion
+    InMap    :: forall k v. (Z3Sorted k, Z3Encoded k, Z3Sorted v, Z3Reserved v) => k -> v -> M.Map k v -> Atom
     -- | v is in s
     -- XXX: s should be any "term", too strong now
-    InSet    :: forall v. (Z3Encoded v, Z3Sorted v) => v -> S.Set v -> Assertion
+    InSet    :: forall v. (Z3Encoded v, Z3Sorted v) => v -> S.Set v -> Atom
     -- | All below are binary relationships
     -- XXX: Should make sure v1 ~ v2, too weak now
-    Equal    :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Assertion
-    LessE    :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Assertion
-    GreaterE :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Assertion
-    Less     :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Assertion
-    Greater  :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Assertion
+    Equal    :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Atom
+    LessE    :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Atom
+    GreaterE :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Atom
+    Less     :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Atom
+    Greater  :: forall v1 v2. (Z3Encoded v1, Z3Encoded v2, Eq v1, Eq v2) => v1 -> v2 -> Atom
 
-instance Z3Encoded Assertion where
+instance Z3Encoded Atom where
     encode (InMap k v m) = do
         kTm <- encode k
         vTm <- encode v

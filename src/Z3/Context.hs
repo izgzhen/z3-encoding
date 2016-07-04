@@ -2,11 +2,11 @@
 
 -- | A concrete context implement SMT provided *for convenience*
 
-module Z3.Context (Z3SMT) where
+module Z3.Context (Z3SMT, localSMT) where
 
 import Z3.Monad
-import Z3.Class
-import Z3.Encoding
+import Z3.Base.Class
+import Z3.Datatypes
 
 import Control.Monad.State
 import Control.Monad.Except
@@ -14,7 +14,7 @@ import qualified Data.Map as M
 
 data SMTContext e = SMTContext {
     -- | Bind local variables introduced by qualifiers to de brujin index in Z3
-    _qualifierContext :: M.Map String (AST, Sort),
+    _valBindCtx :: M.Map String (AST, Sort),
     -- | From type name to Z3 sort
     _datatypeCtx :: M.Map String Sort,
     -- | Counter used to generate globally unique ID
@@ -36,12 +36,13 @@ instance SMT Z3SMT e where
         modify (\ctx -> ctx { _counter = i + 1 })
         return i
 
-    runSMT datatypes e smt = evalZ3With Nothing opts m
+    runSMT initialBindings datatypes e smt = evalZ3With Nothing opts m
         where
             smt' = do
                 sorts <- mapM encodeDataType datatypes
                 let datatypeCtx = M.fromList (zip (map fst datatypes) sorts)
                 modify $ \ctx -> ctx { _datatypeCtx = datatypeCtx }
+                bindVals initialBindings
                 smt
 
             -- XXX: not sure what does this option mean
@@ -49,13 +50,29 @@ instance SMT Z3SMT e where
             m = evalStateT (runExceptT (unZ3SMT smt'))
                            (SMTContext M.empty M.empty 0 e)
 
-    bindQualified x idx s = modify $ \ctx ->
-            ctx { _qualifierContext = M.insert x (idx, s) (_qualifierContext ctx) }
+    bindVal x ast st = modify $ \ctx ->
+            ctx { _valBindCtx = M.insert x (ast, st) (_valBindCtx ctx) }
 
-    getQualifierCtx = _qualifierContext <$> get
+    modifyValBindCtx bindings = do
+        modify $ \ctx -> ctx { _valBindCtx = M.empty }
+        bindVals bindings
 
-    getDataTypeCtx = _datatypeCtx <$> get
+    getValBindMaybe x = do
+        ctx <- _valBindCtx <$> get
+        return $ M.lookup x ctx
+
+    getDataTypeMaybe x = do
+        ctx <- _datatypeCtx <$> get
+        return $ M.lookup x ctx
 
     getExtra = _extra <$> get
 
     modifyExtra f = modify $ \ctx -> ctx { _extra = f (_extra ctx) }
+
+
+localSMT :: Z3SMT e a -> Z3SMT e a
+localSMT m = do
+    s <- get
+    ret <- local m
+    put s
+    return ret
