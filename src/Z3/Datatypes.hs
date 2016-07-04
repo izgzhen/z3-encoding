@@ -1,10 +1,10 @@
 -- |
--- Prviding some Z3 encoding for certain language constructs
--- Require a Class.SMT context to work
+-- Z3 encoding for datatypes
+--
 
-module Z3.Base.Encoding (
-  -- ** encode function application
-  encodeApp,
+module Z3.Datatypes (
+  -- ** encode constructor application
+  encodeCons,
   -- ** encode datatype definition
   encodeDataType
 ) where
@@ -12,8 +12,8 @@ module Z3.Base.Encoding (
 import Z3.Base.Class
 import Z3.Monad hiding (mkMap, App)
 
-encodeApp :: SMT m e => String -> HeteroList -> Sort -> m e AST
-encodeApp fname args retSort = do
+encodeCons :: SMT m e => String -> HeteroList -> Sort -> m e AST
+encodeCons fname args retSort = do
     paramSorts <- sequence $ mapH sortOf args
     sym <- mkStringSymbol fname
     decl <- mkFuncDecl sym paramSorts retSort

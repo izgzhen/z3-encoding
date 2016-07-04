@@ -5,7 +5,6 @@
 module Z3.Base.Atom (Atom(..)) where
 
 import Z3.Base.Class
-import Z3.Base.Encoding()
 import Z3.Monad
 
 import qualified Data.Map as M

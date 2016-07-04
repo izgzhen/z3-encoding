@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                z3-encoding
-version:             0.2.2.2
+version:             0.3.0.0
 synopsis:            High-level assertion encoding to Z3 solver
 description:
   A library targeting at providing high-level, extensible, easy to use Haskell interface to Z3 solver.
@@ -22,8 +22,8 @@ source-repository head
 library
   exposed-modules:     Z3.Base.Class
                        Z3.Base.Logic
-                       Z3.Base.Encoding
                        Z3.Base.Atom
+                       Z3.Datatypes
                        Z3.Context
                        Z3.Z3Pred
   -- other-modules:       
@@ -38,6 +38,7 @@ library
                        ScopedTypeVariables
                        MultiParamTypeClasses
                        RankNTypes
+                       LambdaCase
                        GADTs
   default-language:    Haskell2010
   ghc-options:         -Wall

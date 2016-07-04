@@ -1,19 +1,34 @@
--- Sealed layer for out-of-box use
+{-
+  Sealed AST for out-of-box use
+
+  The design choice is to fix all possible *primitive*
+  types as an AST, so a sound type checking is possible here.
+
+  Question: How to handle TmApp (which is only instantiated as
+  constructors) and potential user functions here? Do we have to
+  provide an extra field or user can make up a Encoded Expr which
+  layers on top of Term here (while preserving (expected) type soundness
+  provided in this module)?
+
+-}
 {-# LANGUAGE StandaloneDeriving #-}
 
 module Z3.Z3Pred where
 
 import Z3.Base.Logic
 import Z3.Base.Class
-import Z3.Base.Encoding
 import Z3.Base.Atom
+import Z3.Context
+import Z3.Datatypes
 import Z3.Monad
 
-import qualified Data.Map as M
-
-data Term = TmVar   String
-          | TmNum   Int
+data Term = -- XXX: Verify that TmVar can serve at the same time as
+            --      qualified var, bounded var, and zero-arity constructor
+            TmVar   String
+          | TmInt   Int
+          | TmDouble Double
           | TmBool  Bool
+          | TmString String
           | TmLE    Term Term
           | TmGE    Term Term
           | TmSub   Term Term
@@ -24,29 +39,26 @@ data Term = TmVar   String
           | TmRem   Term Term
           | TmMinus Term
           | TmIf    Term Term Term
-          | TmApp   String HeteroList Type
+          | TmCons String HeteroList Type
 
 deriving instance Eq Term
 
 data Type = TyBool
           | TyInt
           | TyDouble
+          | TyString
           | TyMap Type Type
           | TySet Type
           | TyADT String
 
 deriving instance Eq Type
 
-type Z3Pred = Pred Term Type ()
+type Z3Pred tm = Pred tm Type ()
 
 instance Z3Encoded Term where
-    encode (TmVar x) = do
-        ctx <- getValBindCtx
-        case M.lookup x ctx of
-            Just (idx, _) -> return idx
-            Nothing -> smtError $ "Can't find variable " ++ x
-    encode (TmNum n) = mkIntSort >>= mkInt n
-    encode (TmBool b) = mkBool b
+    encode (TmVar x) = fst <$> getValBind x
+    encode (TmInt n) = encode n
+    encode (TmBool b) = encode b
     encode (TmLE t1 t2) = encode (LessE t1 t2)
     encode (TmGE t1 t2) = encode (GreaterE t1 t2)
     encode (TmAdd t1 t2) = do
@@ -81,17 +93,14 @@ instance Z3Encoded Term where
         a2 <- encode c
         a3 <- encode a
         mkIte a1 a2 a3
-    encode (TmApp fname args retty) = do
+    encode (TmCons fname args retty) = do
       retSort <- sortOf retty
-      encodeApp fname args retSort
+      encodeCons fname args retSort
 
+-- XXX: Maybe if we have type checking this can be neater
 instance Z3Sorted Term where
-    sortOf (TmVar x) = do
-        ctx <- getValBindCtx
-        case M.lookup x ctx of
-            Just (_, s) -> return s
-            Nothing -> smtError $ "Can't find variable " ++ x
-    sortOf (TmNum _) = mkIntSort
+    sortOf (TmVar x) = snd <$> getValBind x
+    sortOf (TmInt _) = mkIntSort
     sortOf (TmBool _) = mkBoolSort
     sortOf (TmLE _ _) = mkBoolSort
     sortOf (TmGE _ _) = mkBoolSort
@@ -103,7 +112,7 @@ instance Z3Sorted Term where
     sortOf (TmRem _ _) = mkIntSort
     sortOf (TmMinus _) = mkIntSort
     sortOf (TmIf _ c _) = sortOf c
-    sortOf (TmApp _ _ retty) = sortOf retty
+    sortOf (TmCons _ _ retty) = sortOf retty
 
 instance Z3Sorted Type where
     sortOf TyBool     = mkBoolSort
@@ -117,10 +126,11 @@ instance Z3Sorted Type where
         s <- sortOf ty
         intSort <- mkIntSort
         mkArraySort s intSort
-    sortOf (TyADT tyName)  = do
-      ctx <- getDataTypeCtx
-      case M.lookup tyName ctx of
-          Just s  -> return s
-          Nothing -> smtError $ "Undefined type: " ++ tyName
+    sortOf (TyADT tyName) = getDataType tyName
 
 instance Z3Encoded () where
+
+checkPre :: Z3Sorted tm => Z3Pred tm -> Z3SMT e (Result, Maybe Model)
+checkPre pre = local $ do
+    ast <- encode pre
+    local (assert ast >> getModel)

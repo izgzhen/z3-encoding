@@ -2,11 +2,11 @@
 
 -- | A concrete context implement SMT provided *for convenience*
 
-module Z3.Context (Z3SMT) where
+module Z3.Context (Z3SMT, localSMT) where
 
 import Z3.Monad
 import Z3.Base.Class
-import Z3.Base.Encoding
+import Z3.Datatypes
 
 import Control.Monad.State
 import Control.Monad.Except
@@ -38,18 +38,11 @@ instance SMT Z3SMT e where
 
     runSMT initialBindings datatypes e smt = evalZ3With Nothing opts m
         where
-            bind (x:xs, Cons v vs) = do
-                ast <- encode v
-                st <- sortOf v
-                bindVal x ast st
-                bind (xs, vs)
-            bind _ = return ()
-
             smt' = do
                 sorts <- mapM encodeDataType datatypes
                 let datatypeCtx = M.fromList (zip (map fst datatypes) sorts)
                 modify $ \ctx -> ctx { _datatypeCtx = datatypeCtx }
-                bind initialBindings
+                bindVals initialBindings
                 smt
 
             -- XXX: not sure what does this option mean
@@ -60,10 +53,26 @@ instance SMT Z3SMT e where
     bindVal x ast st = modify $ \ctx ->
             ctx { _valBindCtx = M.insert x (ast, st) (_valBindCtx ctx) }
 
-    getValBindCtx = _valBindCtx <$> get
+    modifyValBindCtx bindings = do
+        modify $ \ctx -> ctx { _valBindCtx = M.empty }
+        bindVals bindings
 
-    getDataTypeCtx = _datatypeCtx <$> get
+    getValBindMaybe x = do
+        ctx <- _valBindCtx <$> get
+        return $ M.lookup x ctx
+
+    getDataTypeMaybe x = do
+        ctx <- _datatypeCtx <$> get
+        return $ M.lookup x ctx
 
     getExtra = _extra <$> get
 
     modifyExtra f = modify $ \ctx -> ctx { _extra = f (_extra ctx) }
+
+
+localSMT :: Z3SMT e a -> Z3SMT e a
+localSMT m = do
+    s <- get
+    ret <- local m
+    put s
+    return ret
