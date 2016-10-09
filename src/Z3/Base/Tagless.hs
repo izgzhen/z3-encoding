@@ -14,8 +14,12 @@ class Z3Sorted a where
 instance Z3Sorted Int where
     sortOf _ = mkIntSort
 
+instance Z3Sorted Bool where
+    sortOf _ = mkBoolSort
+
 class Language repr where
     int :: Int -> repr Int
+    bool :: Bool -> repr Bool
     add :: repr Int -> repr Int -> repr Int
     less :: Ord a => repr a -> repr a -> repr Bool
     forall_ :: Z3Sorted a => Z3Sort a -> (repr a -> repr b) -> repr Bool
@@ -24,6 +28,7 @@ newtype SMT m a = SMT { unSMT :: m AST }
 
 instance Language (SMT Z3) where
     int i = SMT $ mkIntSort >>= mkInt i
+    bool b = SMT $ mkBool b
     add a b = SMT $ do
         a' <- unSMT a
         b' <- unSMT b
@@ -48,6 +53,10 @@ runZ3 m = evalZ3With Nothing (opt "MODEL" True) (m >> getModel)
 
 example :: Z3 ()
 example = assert_ $ forall_ Z3Sort (\(x :: SMT Z3 Int) -> less x (int 1))
+
+-- can't be compiled at all
+-- example' :: Z3 ()
+-- example' = assert_ $ forall_ Z3Sort (\(x :: SMT Z3 Int) -> less x (bool False))
 
 main :: IO ()
 main = runZ3 example >>= print . fst
