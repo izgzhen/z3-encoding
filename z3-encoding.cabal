@@ -22,8 +22,7 @@ source-repository head
 library
   exposed-modules:     Z3.Base.Class
                        -- Z3.Base.Logic
-                       -- Z3.Base.Atom
-                       Z3.Base.Tagless
+                       Z3.Base.Language
                        -- Z3.Datatypes
                        -- Z3.Context
                        -- Z3.Z3Pred
