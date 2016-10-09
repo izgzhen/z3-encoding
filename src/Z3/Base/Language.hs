@@ -10,11 +10,15 @@ import qualified Data.Set as S
 
 class Language repr where
     lit :: Z3Lit a => a -> repr a
-    add :: Num a => repr a -> repr a -> repr a
+    add, sub, mul :: Num a => repr a -> repr a -> repr a
+    div_ :: Fractional a => repr a -> repr a -> repr a
+    mod_, rem :: Integral a => repr a -> repr a -> repr a
+    neg :: Num a => repr a -> repr a
     equals :: Eq a => repr a -> repr a -> repr Bool
     lessThan, lessEqual, greaterThan, greaterEqual :: Ord a => repr a -> repr a -> repr Bool
     and_, or_, xor :: repr Bool -> repr Bool -> repr Bool
     not_ :: repr Bool -> repr Bool
+    if_ :: repr Bool -> repr a -> repr a -> repr a
     forall_ :: Z3Sorted a => Z3Sort a -> (repr a -> repr b) -> repr Bool
     exists :: Z3Sorted a => Z3Sort a -> (repr a -> repr b) -> repr Bool
     member_ :: Ord a => repr a -> repr (S.Set a) -> repr Bool
@@ -27,6 +31,15 @@ mkBiOp op a b = SMTR $ do
     a' <- unSMTR a
     b' <- unSMTR b
     op a' b'
+
+mkBiOp' :: ([AST] -> m e AST) -> SMTR m e a1 -> SMTR m e a2 -> SMTR m e a
+mkBiOp' op a b = SMTR $ do
+    a' <- unSMTR a
+    b' <- unSMTR b
+    op [a', b']
+
+mkUnOp :: (AST -> m e AST) -> SMTR m e a1 -> SMTR m e a
+mkUnOp op x = SMTR (unSMTR x >>= op)
 
 mkBinder :: Z3Sorted a1 => ([t] -> [Symbol] -> [Sort] -> AST -> m e AST) ->
                            Z3Sort a1 -> (SMTR m1 e1 a3 -> SMTR m e a2) -> SMTR m e a
@@ -41,7 +54,13 @@ mkBinder op s f = SMTR $ do
 instance SMT m e => Language (SMTR m e) where
     lit = SMTR . encode
 
-    add = mkBiOp (\a' b' -> mkAdd [a', b'])
+    add = mkBiOp' mkAdd
+    sub = mkBiOp' mkSub
+    mul = mkBiOp' mkMul
+    div_ = mkBiOp mkDiv
+    mod_ = mkBiOp mkMod
+    rem = mkBiOp mkRem
+    neg = mkUnOp mkUnaryMinus
 
     lessThan = mkBiOp mkLt
     lessEqual = mkBiOp mkLe
@@ -49,13 +68,19 @@ instance SMT m e => Language (SMTR m e) where
     greaterThan = mkBiOp mkGt
     greaterEqual = mkBiOp mkGe
 
-    and_ = mkBiOp (\a' b' -> mkAnd [a', b'])
-    or_ = mkBiOp (\a' b' -> mkOr [a', b'])
+    and_ = mkBiOp' mkAnd
+    or_ = mkBiOp' mkOr
     xor = mkBiOp mkXor
-    not_ b = SMTR (unSMTR b >>= mkNot)
+    not_ = mkUnOp mkNot
 
     forall_ = mkBinder mkForall
     exists = mkBinder mkExists
+
+    if_ p c a = SMTR $ do
+        a1 <- unSMTR p
+        a2 <- unSMTR c
+        a3 <- unSMTR a
+        mkIte a1 a2 a3
 
     member_ e s = SMTR $ do
         eTm <- unSMTR e
