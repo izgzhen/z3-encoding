@@ -76,3 +76,14 @@ localSMT m = do
     ret <- local m
     put s
     return ret
+
+
+
+
+
+-- assert_ :: SMT Z3 Bool -> Z3 ()
+-- assert_ (SMT m) = m >>= assert
+
+-- runZ3 :: Z3 () -> IO (Result, Maybe Model)
+-- runZ3 m = evalZ3With Nothing (opt "MODEL" True) (m >> getModel)
+

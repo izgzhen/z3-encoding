@@ -21,12 +21,12 @@ source-repository head
 
 library
   exposed-modules:     Z3.Base.Class
-                       Z3.Base.Logic
-                       Z3.Base.Atom
+                       -- Z3.Base.Logic
+                       -- Z3.Base.Atom
                        Z3.Base.Tagless
-                       Z3.Datatypes
-                       Z3.Context
-                       Z3.Z3Pred
+                       -- Z3.Datatypes
+                       -- Z3.Context
+                       -- Z3.Z3Pred
   -- other-modules:       
   -- other-extensions: 
   build-depends:       base >=4.9 && <4.10,
