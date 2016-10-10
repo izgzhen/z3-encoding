@@ -23,8 +23,10 @@ data Z3Sort a = Z3Sort
 class Z3Sorted a where
     sortOf :: SMT m e => Z3Sort a -> m e Sort
 
-class Z3Lit a where
+class Z3Sorted a => Z3Lit a where
     encode :: SMT m e => a -> m e AST
+    sortOf' :: SMT m e => a -> m e Sort
+    sortOf' _ = sortOf (Z3Sort :: Z3Sort a)
 
 instance Z3Sorted Int where
     sortOf _ = mkIntSort
