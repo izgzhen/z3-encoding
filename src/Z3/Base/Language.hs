@@ -23,5 +23,6 @@ class Language repr where
     (==>) :: repr Bool -> repr Bool -> repr Bool
     member_ :: Ord a => repr a -> repr (S.Set a) -> repr Bool
 
-
-
+class Language repr => OptLang repr where
+    none :: repr (Maybe a)
+    some :: Z3Lit a => a -> repr (Maybe a)

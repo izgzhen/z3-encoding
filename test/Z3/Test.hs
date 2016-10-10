@@ -38,11 +38,9 @@ tests = [
     (forall_ Z3Sort (\(_ :: R Int) -> lit True ==> lit False), Right Unsat),
     -- (PAtom (InMap (1 :: Int) (1 :: Int) (M.singleton (1 :: Int) 1)), Right Sat),
     (int 10 `member_` lit (S.singleton 10), Right Sat),
-    -- (PAtom (Equal (TmCons "none" Nil (TyADT "optionInt"))
-    --                 (TmCons "none" Nil (TyADT "optionInt"))), Right Sat),
-    -- (PForAll "x" (TyADT "optionInt") PTrue, Right Sat),
-    -- (PAtom (Equal (TmCons "just" (Cons (1 :: Int) Nil) (TyADT "optionInt"))
-    --                 (TmCons "just" (Cons (1 :: Int) Nil) (TyADT "optionInt"))), Right Sat),
+    ((none :: R (Maybe Int)) .= none, Right Sat),
+    (forall_ Z3Sort (\(_ :: R (Maybe Int)) -> lit True), Right Sat),
+    (some (1 :: Int) .= some (1 :: Int), Right Sat),
     (exists Z3Sort (\(x :: R Int) ->
         ((x .- int 1) .>= int 3) /\ (((x .- int 2) .- int 1) .>= int 0)), Right Sat),
     (exists Z3Sort (\(x :: R Int) ->
@@ -57,7 +55,9 @@ tests = [
 
 test :: (SMTR Z3SMT () Bool, Either String Result) -> IO ()
 test (m, expected) = do
-    ret <- runSMT () $ do
+    let adts = [("option", [("none", []),
+                            ("some", [("unSome", Type $ sortOf (Z3Sort :: Z3Sort Int))])])]
+    ret <- runSMT () adts $ do
         (r, _mm) <- checkPre m
         case r of
             Unsat -> do

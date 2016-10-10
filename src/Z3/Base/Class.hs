@@ -11,7 +11,8 @@ module Z3.Base.Class (
     Z3Sort(..),
     -- ** Monad which can be instantiated into a concrete context
     SMT(..),
-    Type(..)
+    Type(..),
+    Datatype
 ) where
 
 import Z3.Monad
@@ -22,6 +23,8 @@ import qualified Data.Set as S
 data Z3Sort a = Z3Sort
 
 newtype Type m e = Type { unType :: m e Sort }
+
+type Datatype m e = (String, [(String, [(String, Type m e)])])
 
 class Z3Sorted a where
     sortOf :: SMT m e => Z3Sort a -> m e Sort
@@ -49,12 +52,24 @@ instance Z3Sorted Bool where
 instance Z3Lit Bool where
     encode = mkBool
 
+instance Z3Sorted (Maybe a) where
+    sortOf _ = do
+        Just s <- getDataTypeMaybe "option" -- FIXME
+        return s
+
 class (MonadError String (m e), MonadZ3 (m e)) => SMT m e where
     -- | Globally unique id
     genFreshId :: m e Int
 
     -- | Given extra field and the SMT monad, return the fallible result in IO monad
-    runSMT :: e -> m e a -> IO (Either String a)
+    runSMT :: e -> [Datatype m e] -> m e a -> IO (Either String a)
+
+    getDataTypeMaybe :: String -> m e (Maybe Sort)
+
+    getDataType :: String -> m e Sort
+    getDataType x = getDataTypeMaybe x >>= \case
+        Just p  -> return p
+        Nothing -> smtError $ "no such type variable: " ++ x
 
     -- | Get extra
     getExtra :: m e e

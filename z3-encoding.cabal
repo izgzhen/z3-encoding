@@ -24,6 +24,7 @@ library
                        Z3.Base.Language
                        Z3.Base.SMTR
                        Z3.Context
+                       Z3.Datatypes
   -- other-modules:       
   -- other-extensions: 
   build-depends:       base >=4.9 && <4.10,

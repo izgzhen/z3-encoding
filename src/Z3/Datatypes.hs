@@ -3,7 +3,7 @@ module Z3.Datatypes where
 import Z3.Base.Class
 import Z3.Monad hiding (mkMap, App)
 
-encodeDataType :: SMT m e => (String, [(String, [(String, Type m e)])]) -> m e Sort
+encodeDataType :: SMT m e => Datatype m e -> m e Sort
 encodeDataType (tyName, alts) = do
     constrs <- mapM (\(consName, fields) -> do
                         consSym <- mkStringSymbol consName
@@ -17,8 +17,3 @@ encodeDataType (tyName, alts) = do
                     ) alts
     sym <- mkStringSymbol tyName
     mkDatatype sym constrs
-
-tlist :: SMT m e => [Type m e]
-tlist = [Type $ sortOf (Z3Sort :: Z3Sort Int),
-         Type $ sortOf (Z3Sort :: Z3Sort Bool)]
-

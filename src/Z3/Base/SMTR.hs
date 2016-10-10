@@ -72,3 +72,18 @@ instance SMT m e => Language (SMTR m e) where
         -- XXX: magic number
         one <- (mkIntSort >>= mkInt 1)
         mkEq one lhs
+
+instance SMT m e => OptLang (SMTR m e) where
+    none = SMTR $ do
+        sym <- mkStringSymbol "none"
+        Just s <- getDataTypeMaybe "option" -- FIXME
+        decl <- mkFuncDecl sym [] s
+        mkApp decl []
+
+    some a = SMTR $ do
+        sa <- sortOf' a
+        asta <- unSMTR $ lit a
+        sym <- mkStringSymbol "some"
+        Just s <- getDataTypeMaybe "option" -- FIXME
+        decl <- mkFuncDecl sym [sa] s
+        mkApp decl [asta]
