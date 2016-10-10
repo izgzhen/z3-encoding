@@ -6,6 +6,7 @@ module Z3.Base.Language where
 
 import Z3.Monad
 import Z3.Base.Class
+import Z3.Base.Hlist
 import qualified Data.Set as S
 
 class Language repr where
@@ -22,7 +23,7 @@ class Language repr where
     forall_ :: Z3Sorted a => Z3Sort a -> (repr a -> repr b) -> repr Bool
     exists :: Z3Sorted a => Z3Sort a -> (repr a -> repr b) -> repr Bool
     member_ :: Ord a => repr a -> repr (S.Set a) -> repr Bool
-
+    app :: Z3Sorted a => String -> Z3Sort a -> HeteroList -> repr a
 
 newtype SMTR m e a = SMTR { unSMTR :: SMT m e => m e AST }
 
