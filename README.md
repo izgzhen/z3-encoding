@@ -5,20 +5,18 @@ z3-encoding
 
 [![Build Status](https://travis-ci.org/izgzhen/z3-encoding.svg?branch=master)](https://travis-ci.org/izgzhen/z3-encoding)
 
-A library targeting at providing high-level, extensible, easy to use Haskell interface to [Z3 solver](http://research.microsoft.com/en-us/um/redmond/projects/z3/).
+Assertion language embedded in Haskell, based on [Z3 solver](http://research.microsoft.com/en-us/um/redmond/projects/z3/).
 
 ## Features
 * [x] Primitive types: boolean, integer, double precision float number
-* [x] Complex types: map, set, ADT
+* [x] Complex types: set, <strike>map, ADT</strike>
 * [x] Logic primitives and connectives: true, false, conjunction, disjunction, negation, implication
 * [x] Logic qualifiers: universal, existential
 * [x] Assertions for primitive types: equality, less than
 * [x] Assertions for complex types: membership testing
-* [x] Extensible function
-* [x] Extensible assertion
-* [ ] Static type safety
-
-And all above are provided in a *declarative, composable and eDSL* style! See `Z3.Class` and `Z3.Logic` for details.
+* [ ] Extensible function
+* [ ] Extensible assertion
+* [x] Static type safety
 
 ## Usage
 1. Install `z3`, noting its `include` path and `lib` path as specified by `prefix=`
