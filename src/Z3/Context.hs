@@ -2,21 +2,16 @@
 
 -- | A concrete context implement SMT provided *for convenience*
 
-module Z3.Context (Z3SMT, localSMT) where
+module Z3.Context (Z3SMT, localSMT, assert_) where
 
 import Z3.Monad
 import Z3.Base.Class
-import Z3.Datatypes
+import Z3.Base.SMTR
 
 import Control.Monad.State
 import Control.Monad.Except
-import qualified Data.Map as M
 
 data SMTContext e = SMTContext {
-    -- | Bind local variables introduced by qualifiers to de brujin index in Z3
-    _valBindCtx :: M.Map String (AST, Sort),
-    -- | From type name to Z3 sort
-    _datatypeCtx :: M.Map String Sort,
     -- | Counter used to generate globally unique ID
     _counter :: Int,
     -- | Extra field reserved for extension
@@ -36,39 +31,15 @@ instance SMT Z3SMT e where
         modify (\ctx -> ctx { _counter = i + 1 })
         return i
 
-    runSMT initialBindings datatypes e smt = evalZ3With Nothing opts m
+    runSMT e smt = evalZ3With Nothing opts m
         where
-            smt' = do
-                sorts <- mapM encodeDataType datatypes
-                let datatypeCtx = M.fromList (zip (map fst datatypes) sorts)
-                modify $ \ctx -> ctx { _datatypeCtx = datatypeCtx }
-                bindVals initialBindings
-                smt
-
-            -- XXX: not sure what does this option mean
             opts = opt "MODEL" True
-            m = evalStateT (runExceptT (unZ3SMT smt'))
-                           (SMTContext M.empty M.empty 0 e)
-
-    bindVal x ast st = modify $ \ctx ->
-            ctx { _valBindCtx = M.insert x (ast, st) (_valBindCtx ctx) }
-
-    modifyValBindCtx bindings = do
-        modify $ \ctx -> ctx { _valBindCtx = M.empty }
-        bindVals bindings
-
-    getValBindMaybe x = do
-        ctx <- _valBindCtx <$> get
-        return $ M.lookup x ctx
-
-    getDataTypeMaybe x = do
-        ctx <- _datatypeCtx <$> get
-        return $ M.lookup x ctx
+            m = evalStateT (runExceptT (unZ3SMT smt))
+                           (SMTContext 0 e)
 
     getExtra = _extra <$> get
 
     modifyExtra f = modify $ \ctx -> ctx { _extra = f (_extra ctx) }
-
 
 localSMT :: Z3SMT e a -> Z3SMT e a
 localSMT m = do
@@ -77,13 +48,5 @@ localSMT m = do
     put s
     return ret
 
-
-
-
-
--- assert_ :: SMT Z3 Bool -> Z3 ()
--- assert_ (SMT m) = m >>= assert
-
--- runZ3 :: Z3 () -> IO (Result, Maybe Model)
--- runZ3 m = evalZ3With Nothing (opt "MODEL" True) (m >> getModel)
-
+assert_ :: SMTR Z3SMT e Bool -> Z3SMT e ()
+assert_ (SMTR m) = m >>= assert

@@ -22,9 +22,8 @@ source-repository head
 library
   exposed-modules:     Z3.Base.Class
                        Z3.Base.Language
-                       -- Z3.Datatypes
-                       -- Z3.Context
-                       -- Z3.Z3Pred
+                       Z3.Base.SMTR
+                       Z3.Context
   -- other-modules:       
   -- other-extensions: 
   build-depends:       base >=4.9 && <4.10,
