@@ -2,7 +2,7 @@
 
 -- | A concrete context implement SMT provided *for convenience*
 
-module Z3.Context (Z3SMT, localSMT, assert_) where
+module Z3.Context (Z3SMT, localSMT, checkPre) where
 
 import Z3.Monad
 import Z3.Base.Class
@@ -48,5 +48,5 @@ localSMT m = do
     put s
     return ret
 
-assert_ :: SMTR Z3SMT e Bool -> Z3SMT e ()
-assert_ (SMTR m) = m >>= assert
+checkPre :: SMTR Z3SMT e Bool -> Z3SMT e (Result, Maybe Model)
+checkPre (SMTR m) = (m >>= assert) >> getModel

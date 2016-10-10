@@ -36,27 +36,28 @@ mkBinder op s f = SMTR $ do
 instance SMT m e => Language (SMTR m e) where
     lit = SMTR . encode
 
-    add = mkBiOp' mkAdd
-    sub = mkBiOp' mkSub
-    mul = mkBiOp' mkMul
-    div_ = mkBiOp mkDiv
+    (.+) = mkBiOp' mkAdd
+    (.-) = mkBiOp' mkSub
+    (.*) = mkBiOp' mkMul
+    (./) = mkBiOp mkDiv
     mod_ = mkBiOp mkMod
     rem = mkBiOp mkRem
     neg = mkUnOp mkUnaryMinus
 
-    lessThan = mkBiOp mkLt
-    lessEqual = mkBiOp mkLe
-    equals = mkBiOp mkEq
-    greaterThan = mkBiOp mkGt
-    greaterEqual = mkBiOp mkGe
+    (.<) = mkBiOp mkLt
+    (.<=) = mkBiOp mkLe
+    (.=) = mkBiOp mkEq
+    (.>) = mkBiOp mkGt
+    (.>=) = mkBiOp mkGe
 
-    and_ = mkBiOp' mkAnd
-    or_ = mkBiOp' mkOr
+    (/\) = mkBiOp' mkAnd
+    (\/) = mkBiOp' mkOr
     xor = mkBiOp mkXor
     not_ = mkUnOp mkNot
 
     forall_ = mkBinder mkForall
     exists = mkBinder mkExists
+    (==>) = mkBiOp mkImplies
 
     if_ p c a = SMTR $ do
         a1 <- unSMTR p
@@ -71,6 +72,3 @@ instance SMT m e => Language (SMTR m e) where
         -- XXX: magic number
         one <- (mkIntSort >>= mkInt 1)
         mkEq one lhs
-
-example :: SMT m e => SMTR m e Bool
-example = forall_ Z3Sort (\(x :: SMTR m e Int) -> lessThan x (lit 1))

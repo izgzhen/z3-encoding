@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                z3-encoding
-version:             0.3.0.0
+version:             0.4.0.0
 synopsis:            High-level assertion encoding to Z3 solver
 description:
   A library targeting at providing high-level, extensible, easy to use Haskell interface to Z3 solver.
