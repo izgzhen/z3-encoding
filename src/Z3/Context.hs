@@ -7,6 +7,7 @@ module Z3.Context (Z3SMT, localSMT, checkPre) where
 import Z3.Monad
 import Z3.Base.Class
 import Z3.Base.SMTR
+import Z3.Datatypes
 
 import Control.Monad.State
 import Control.Monad.Except

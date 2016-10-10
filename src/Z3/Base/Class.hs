@@ -10,7 +10,8 @@ module Z3.Base.Class (
     -- ** Type proxy helper, used with Z3Sorted
     Z3Sort(..),
     -- ** Monad which can be instantiated into a concrete context
-    SMT(..)
+    SMT(..),
+    Type(..)
 ) where
 
 import Z3.Monad
@@ -19,6 +20,8 @@ import Control.Monad.Except
 import qualified Data.Set as S
 
 data Z3Sort a = Z3Sort
+
+newtype Type m e = Type { unType :: m e Sort }
 
 class Z3Sorted a where
     sortOf :: SMT m e => Z3Sort a -> m e Sort
